@@ -581,6 +581,289 @@ class PostgreSQLDatabaseManager:
             )
 
             return []
+    # -----------------------------------------
+    # Search Jobs By Location
+    # -----------------------------------------
+
+    def search_jobs_by_location(
+        self,
+        location
+    ):
+        """
+        Search jobs matching
+        a location.
+        """
+
+        try:
+
+            self.cursor.execute(
+                """
+                SELECT
+                   title,
+                   company,
+                   location,
+                   source
+                FROM jobs
+                WHERE location ILIKE %s
+                ORDER BY scraped_date DESC
+                """,
+                (
+                    f"%{location}%",
+                )
+            )
+
+            return self.cursor.fetchall()
+
+        except Exception as error:
+
+            logger.error(
+                f"Location search failed: {error}"
+            )
+
+            return []
+
+    # -----------------------------------------
+    # Search Jobs By Date
+    # -----------------------------------------
+
+    def search_jobs_by_date(
+        self,
+        cutoff_date
+    ):
+        """
+        Return jobs newer than
+        the supplied date.
+        """
+
+        try:
+
+            self.cursor.execute(
+                """
+                SELECT
+                    title,
+                    company,
+                    location,
+                    scraped_date
+                FROM jobs
+                WHERE scraped_date >= %s
+                ORDER BY scraped_date DESC
+                """,
+                (
+                    cutoff_date,
+                )
+            )
+
+            return self.cursor.fetchall()
+
+        except Exception as error:
+
+            logger.error(
+                f"Date search failed: {error}"
+            )
+
+            return []
+
+    # -----------------------------------------
+    # Delete Unknown Jobs
+    # -----------------------------------------
+
+    def delete_unknown_jobs(
+        self
+    ):
+        """
+        Delete jobs with
+        missing titles.
+        """
+
+        try:
+
+            self.cursor.execute(
+                """
+               DELETE FROM jobs
+               WHERE title IS NULL
+               OR title = ''
+               """
+            )
+
+            deleted_rows = (
+                self.cursor.rowcount
+            )
+
+            self.connection.commit()
+
+            return deleted_rows
+
+        except Exception as error:
+
+            logger.error(
+                f"Cleanup failed: {error}"
+            )
+
+            self.connection.rollback()
+
+            return 0
+
+    # -----------------------------------------
+    # Get Jobs With Salary
+    # -----------------------------------------
+
+    def get_jobs_with_salary(
+        self
+    ):
+        """
+        Return jobs containing
+        salary information.
+        """
+
+        try:
+
+            self.cursor.execute(
+                """
+                SELECT
+                  title,
+                  company,
+                  salary
+                FROM jobs
+                WHERE salary IS NOT NULL
+                """
+            )
+
+            return self.cursor.fetchall()
+
+        except Exception as error:
+
+            logger.error(
+                f"Salary fetch failed: {error}"
+            )
+
+            return []
+
+    # -----------------------------------------
+    # Get Jobs Since Days
+    # -----------------------------------------
+
+    def get_jobs_since_days(
+        self,
+        days
+    ):
+        """
+        Return jobs scraped within
+        the last N days.
+
+        Used by:
+
+        - date_search.py
+        """
+
+        from datetime import (
+            datetime,
+            timedelta
+        )
+
+        cutoff_date = (
+            datetime.now()
+            - timedelta(days=days)
+        )
+
+        try:
+
+            self.cursor.execute(
+                """
+                SELECT
+                   title,
+                   company,
+                   location,
+                   scraped_date
+                FROM jobs
+                WHERE scraped_date >= %s
+                ORDER BY scraped_date DESC
+                 """,
+                (
+                    cutoff_date,
+                )
+            )
+
+            return self.cursor.fetchall()
+
+        except Exception as error:
+
+            logger.error(
+                f"Date search failed: {error}"
+            )
+
+            return []
+
+    # -----------------------------------------
+    # Get Salary Data
+    # -----------------------------------------
+
+    def get_salary_data(self):
+        """
+        Return salary information
+        for all jobs.
+
+        Used by:
+
+        - check_salaries.py
+        """
+
+        try:
+
+            self.cursor.execute(
+                """
+                SELECT
+                    id,
+                    title,
+                    salary
+                FROM jobs
+                """
+            )
+
+            return self.cursor.fetchall()
+
+        except Exception as error:
+
+            logger.error(
+                f"Salary fetch failed: {error}"
+            )
+
+            return []
+
+    # -----------------------------------------
+    # Get Salary Analysis Data
+    # -----------------------------------------
+
+    def get_salary_analysis_data(self):
+        """
+        Return salary data used
+        for salary analysis.
+
+        Used by:
+
+        - salary_analysis.py
+        """
+
+        try:
+
+            self.cursor.execute(
+                """
+                SELECT
+                    title,
+                    company,
+                    salary
+                FROM jobs
+                """
+            )
+
+            return self.cursor.fetchall()
+
+        except Exception as error:
+
+            logger.error(
+                f"Salary analysis failed: {error}"
+            )
+
+            return []
 
     # -----------------------------------------
     # Advanced Search

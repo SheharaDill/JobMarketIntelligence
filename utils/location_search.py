@@ -39,16 +39,17 @@ def search_by_location(location):
 
     db = PostgreSQLDatabaseManager()
 
-    # Retrieve matching jobs using
-    # the PostgreSQL manager method
+    # Retrieve matching jobs
 
-    results = db.get_jobs_by_location(
+    results = db.search_jobs_by_location(
         location
     )
 
     print()
     print("=" * 50)
-    print(f"LOCATION SEARCH: {location}")
+    print(
+        f"LOCATION SEARCH: {location}"
+    )
     print("=" * 50)
 
     # No matching jobs found
@@ -57,30 +58,41 @@ def search_by_location(location):
 
         print("\nNo jobs found.")
 
-    else:
+        db.close()
+
+        return
+
+    print(
+        f"\nJobs Found: "
+        f"{len(results)}"
+    )
+
+    # Display matching jobs
+
+    for (
+        title,
+        company,
+        job_location,
+        source
+    ) in results:
+
+        print()
 
         print(
-            f"\nJobs Found: "
-            f"{len(results)}"
+            f"Title    : {title}"
         )
 
-        # Display matching jobs
+        print(
+            f"Company  : {company}"
+        )
 
-        for row in results:
+        print(
+            f"Location : {job_location}"
+        )
 
-            print()
-
-            print(
-                f"Title    : {row[1]}"
-            )
-
-            print(
-                f"Company  : {row[2]}"
-            )
-
-            print(
-                f"Location : {row[3]}"
-            )
+        print(
+            f"Source   : {source}"
+        )
 
     # Close database connection
 

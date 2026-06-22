@@ -28,18 +28,7 @@ def main():
 
     try:
 
-        db.cursor.execute(
-            """
-            SELECT
-                id,
-                title,
-                salary
-            FROM jobs
-            ORDER BY id DESC
-            """
-        )
-
-        jobs = db.cursor.fetchall()
+        jobs = db.get_salary_data()
 
         print("\nSALARY DATA\n")
 

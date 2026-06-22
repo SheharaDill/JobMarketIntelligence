@@ -49,26 +49,7 @@ def search_jobs(keyword):
     # Search Jobs
     # -------------------------------------
 
-    db.cursor.execute(
-        """
-        SELECT
-            title,
-            company,
-            location
-        FROM jobs
-        WHERE title ILIKE %s
-        OR company ILIKE %s
-        ORDER BY scraped_date DESC
-        """,
-        (
-            f"%{keyword}%",
-            f"%{keyword}%"
-        )
-    )
-
-    # Retrieve matching jobs
-
-    results = db.cursor.fetchall()
+    results = db.search_jobs(keyword)
 
     # -------------------------------------
     # Display Header

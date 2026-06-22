@@ -101,7 +101,15 @@ def advanced_search(
     # Optional Location Filter
     # ---------------------------------
 
-    if location.strip():
+    if (
+       location.strip()
+       and location.lower() not in (
+           "worldwide",
+            "all",
+            "any",
+            "*"
+           )
+       ):
 
         query += """
             AND location ILIKE %s

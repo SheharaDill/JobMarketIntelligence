@@ -53,25 +53,7 @@ def search_by_days(days):
 
     # Execute PostgreSQL query
 
-    db.cursor.execute(
-        """
-        SELECT
-            title,
-            company,
-            location,
-            scraped_date
-        FROM jobs
-        WHERE scraped_date >= %s
-        ORDER BY scraped_date DESC
-        """,
-        (
-            cutoff_date,
-        )
-    )
-
-    # Retrieve results
-
-    results = db.cursor.fetchall()
+    results = db.get_jobs_since_days(days)
 
     # ---------------------------------
     # Display Results

@@ -124,17 +124,7 @@ def analyze_salaries():
         # Retrieve Jobs
         # ---------------------------------
 
-        db.cursor.execute(
-            """
-            SELECT
-                title,
-                company,
-                salary
-            FROM jobs
-            """
-        )
-
-        jobs = db.cursor.fetchall()
+        jobs = db.get_salary_analysis_data()
 
         # ---------------------------------
         # Store Valid Salary Jobs
