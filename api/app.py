@@ -65,57 +65,20 @@ def analytics():
 
     db = PostgreSQLDatabaseManager()
 
-    # ---------------------------------
     # Total Jobs
-    # ---------------------------------
 
-    db.cursor.execute(
-        """
-        SELECT COUNT(*)
-        FROM jobs
-        """
-    )
-
-    total_jobs = (
-        db.cursor.fetchone()[0]
-    )
+    total_jobs = db.count_jobs()
 
     # ---------------------------------
     # Jobs Collected Today
     # ---------------------------------
 
-    db.cursor.execute(
-        """
-        SELECT COUNT(*)
-        FROM jobs
-        WHERE DATE(scraped_date)
-        =
-        CURRENT_DATE
-        """
-    )
-
-    jobs_today = (
-        db.cursor.fetchone()[0]
-    )
-
+    jobs_today = db.count_jobs_today()
     # ---------------------------------
     # Jobs Per Source
     # ---------------------------------
 
-    db.cursor.execute(
-        """
-        SELECT
-            source,
-            COUNT(*)
-        FROM jobs
-        GROUP BY source
-        ORDER BY COUNT(*) DESC
-        """
-    )
-
-    source_rows = (
-        db.cursor.fetchall()
-    )
+    source_rows = db.get_jobs_per_source()
 
     sources = []
 
@@ -132,21 +95,7 @@ def analytics():
     # Top Hiring Companies
     # ---------------------------------
 
-    db.cursor.execute(
-        """
-        SELECT
-            company,
-            COUNT(*)
-        FROM jobs
-        GROUP BY company
-        ORDER BY COUNT(*) DESC
-        LIMIT 5
-        """
-    )
-
-    company_rows = (
-        db.cursor.fetchall()
-    )
+    company_rows = db.get_top_companies(5)
 
     companies = []
 
@@ -208,22 +157,9 @@ def jobs():
 
     # Get latest jobs
 
-    db.cursor.execute(
-        """
-        SELECT
-            title,
-            company,
-            location,
-            source
-        FROM jobs
-        ORDER BY id DESC
-        LIMIT 20
-        """
-    )
+   # Get latest jobs using manager method
 
-    rows = (
-        db.cursor.fetchall()
-    )
+    rows = db.get_latest_jobs()
 
     # Create response list
 
@@ -288,23 +224,8 @@ def jobs_by_source(
     # Get jobs from
     # selected source
 
-    db.cursor.execute(
-        """
-        SELECT
-            title,
-            company,
-            location,
-            source
-        FROM jobs
-        WHERE source = %s
-        ORDER BY id DESC
-        LIMIT 20
-        """,
-        (source_name,)
-    )
-
-    rows = (
-        db.cursor.fetchall()
+    rows = db.get_jobs_by_source(
+        source_name
     )
 
     # Create response list
@@ -368,23 +289,8 @@ def jobs_by_location(
     # Search jobs using
     # partial location match
 
-    db.cursor.execute(
-        """
-        SELECT
-            title,
-            company,
-            location,
-            source
-        FROM jobs
-        WHERE location ILIKE %s
-        ORDER BY id DESC
-        LIMIT 20
-        """,
-        (f"%{location}%",)
-    )
-
-    rows = (
-        db.cursor.fetchall()
+    rows = db.get_jobs_by_location(
+        location
     )
 
     # Create response list
@@ -412,6 +318,146 @@ def jobs_by_location(
 
     return jobs
 
+# -----------------------------------
+# Search Jobs By Keyword
+# -----------------------------------
+# Example:
+#
+# http://127.0.0.1:5000/jobs/search/Python
+#
+# -----------------------------------
+
+
+@app.route(
+    "/jobs/search/<keyword>"
+)
+def search_jobs(
+    keyword
+):
+
+    # Open database connection
+
+    db = PostgreSQLDatabaseManager()
+
+    # Search jobs
+
+    rows = db.search_jobs(
+        keyword
+    )
+
+    # Build response
+
+    jobs = []
+
+    for row in rows:
+
+        jobs.append(
+            {
+                "title": row[0],
+                "company": row[1],
+                "location": row[2]
+            }
+        )
+
+    # Close database
+
+    db.close()
+
+    return jobs
+
+# -----------------------------------
+# Top Job Locations
+# -----------------------------------
+#
+# Example:
+#
+# http://127.0.0.1:5000/analytics/top-locations
+#
+# -----------------------------------
+
+
+@app.route(
+    "/analytics/top-locations"
+)
+def top_locations():
+
+    db = PostgreSQLDatabaseManager()
+
+    rows = db.get_top_locations()
+
+    locations = []
+
+    for row in rows:
+
+        locations.append(
+            {
+                "location": row[0],
+                "count": row[1]
+            }
+        )
+
+    db.close()
+
+    return locations
+# -----------------------------------
+# Top Hiring Companies
+# -----------------------------------
+#
+# Example:
+#
+# http://127.0.0.1:5000/analytics/top-companies
+#
+# -----------------------------------
+
+
+@app.route(
+    "/analytics/top-companies"
+)
+def top_companies():
+
+    db = PostgreSQLDatabaseManager()
+
+    rows = db.get_top_companies()
+
+    companies = []
+
+    for row in rows:
+
+        companies.append(
+            {
+                "company": row[0],
+                "count": row[1]
+            }
+        )
+
+    db.close()
+
+    return companies
+# -----------------------------------
+# Analytics Summary
+# -----------------------------------
+#
+# Example:
+#
+# http://127.0.0.1:5000/analytics/summary
+#
+# -----------------------------------
+
+
+@app.route(
+    "/analytics/summary"
+)
+def analytics_summary():
+
+    db = PostgreSQLDatabaseManager()
+
+    summary = (
+        db.get_summary_stats()
+    )
+
+    db.close()
+
+    return summary
 
 # -----------------------------------
 # Get Jobs By Company
@@ -452,25 +498,8 @@ def jobs_by_company(
     # Search jobs using
     # partial company match
 
-    db.cursor.execute(
-        """
-        SELECT
-            title,
-            company,
-            location,
-            source
-        FROM jobs
-        WHERE company ILIKE %s
-        ORDER BY id DESC
-        LIMIT 20
-        """,
-        (
-            f"%{company}%",
-        )
-    )
-
-    rows = (
-        db.cursor.fetchall()
+    rows = db.get_jobs_by_company(
+        company
     )
 
     # Create response list

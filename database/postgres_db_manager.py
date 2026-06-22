@@ -621,6 +621,44 @@ class PostgreSQLDatabaseManager:
             )
 
             return []
+    # -----------------------------------------
+    # Top Hiring Companies
+    # -----------------------------------------
+
+    def get_top_companies(
+        self,
+        limit=10
+    ):
+        """
+        Return top hiring companies.
+        """
+
+        try:
+
+            self.cursor.execute(
+                """
+                SELECT
+                   company,
+                   COUNT(*)
+                FROM jobs
+                GROUP BY company
+                ORDER BY COUNT(*) DESC
+                LIMIT %s
+                """,
+                (
+                    limit,
+                )
+            )
+
+            return self.cursor.fetchall()
+
+        except Exception as error:
+
+            logger.error(
+                f"Top companies failed: {error}"
+            )
+
+            return []
 
     # -----------------------------------------
     # Search Jobs By Date
@@ -864,6 +902,69 @@ class PostgreSQLDatabaseManager:
             )
 
             return []
+
+    # -----------------------------------------
+    # Analytics Summary
+    # -----------------------------------------
+
+    def get_summary_stats(self):
+        """
+        Return summary statistics.
+        """
+
+        try:
+
+            self.cursor.execute(
+                """
+                SELECT COUNT(*)
+                FROM jobs
+                """
+            )
+
+            total_jobs = (
+                self.cursor.fetchone()[0]
+            )
+
+            self.cursor.execute(
+                """
+                SELECT COUNT(DISTINCT company)
+                FROM jobs
+                """
+            )
+
+            total_companies = (
+                self.cursor.fetchone()[0]
+            )
+
+            self.cursor.execute(
+                """
+                SELECT COUNT(DISTINCT source)
+                FROM jobs
+                """
+            )
+
+            total_sources = (
+                self.cursor.fetchone()[0]
+            )
+
+            return {
+                "total_jobs":
+                total_jobs,
+
+                "total_companies":
+                total_companies,
+
+                "total_sources":
+                total_sources
+            }
+
+        except Exception as error:
+
+            logger.error(
+                f"Summary statistics failed: {error}"
+            )
+
+            return {}
 
     # -----------------------------------------
     # Advanced Search
