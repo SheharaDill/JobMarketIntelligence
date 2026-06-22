@@ -48,32 +48,40 @@ def daily_job_collection():
         from every configured source.
     """
 
-    print()
+    try:
+        print()
 
-    print("=" * 50)
+        print("=" * 50)
 
-    print(
-        "DAILY JOB COLLECTION STARTED"
-    )
+        print(
+            "DAILY JOB COLLECTION STARTED"
+        )
 
-    print("=" * 50)
+        print("=" * 50)
 
-    run_all_scrapers()
+        run_all_scrapers()
 
-    print()
+        print()
 
-    print("=" * 50)
+        print("=" * 50)
 
-    print(
-        "DAILY JOB COLLECTION COMPLETE"
-    )
+        print(
+            "DAILY JOB COLLECTION COMPLETE"
+        )
 
-    print("=" * 50)
+        print("=" * 50)
 
+    except Exception as error:
 
+        print()
+
+        print(
+            f"Collection failed: {error}"
+        )
 # -----------------------------------------
 # Daily Email Report Task
 # -----------------------------------------
+
 
 def daily_email_report():
     """
@@ -91,7 +99,12 @@ def daily_email_report():
 
     print("=" * 50)
 
-    send_email()
+    try:
+        send_email()
+    except Exception as error:
+        print(
+            f"Email failed: {error}"
+        )
 
     print()
 

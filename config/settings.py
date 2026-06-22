@@ -25,23 +25,23 @@ DATABASE_NAME = "database/jobs.db"
 # PostgreSQL Configuration
 
 POSTGRES_HOST = os.getenv(
-    "POSTGRES_HOST",
-    "localhost"
+    "POSTGRES_HOST"
+
 )
 
 POSTGRES_PORT = os.getenv(
-    "POSTGRES_PORT",
-    "5432"
+    "POSTGRES_PORT"
+
 )
 
 POSTGRES_DATABASE = os.getenv(
     "POSTGRES_DATABASE",
-    "job_market_intelligence"
+
 )
 
 POSTGRES_USER = os.getenv(
     "POSTGRES_USER",
-    "postgres"
+
 )
 
 

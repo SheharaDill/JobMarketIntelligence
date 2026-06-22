@@ -250,6 +250,181 @@ class PostgreSQLDatabaseManager:
             return []
 
     # -----------------------------------------
+    # Get Recent Jobs
+    # -----------------------------------------
+
+    def get_recent_jobs(
+        self,
+        days
+    ):
+        """
+        Return jobs collected
+        within the last N days.
+
+        Example:
+
+        get_recent_jobs(30)
+        """
+
+        try:
+
+            self.cursor.execute(
+                """
+               SELECT
+                  title,
+                  company,
+                  location,
+                  source,
+                  scraped_date
+                FROM jobs
+                WHERE scraped_date >=
+                NOW() - (%s * INTERVAL '1 day')
+                ORDER BY scraped_date DESC
+                """,
+                (
+                    days,
+                )
+            )
+
+            return self.cursor.fetchall()
+
+        except Exception as error:
+
+            logger.error(
+                f"Recent jobs query failed: {error}"
+            )
+
+            return []
+
+    # -----------------------------------------
+    # Platform Statistics
+    # -----------------------------------------
+
+    def get_statistics(self):
+        """
+        Return overall platform
+        statistics.
+
+        Returns:
+
+        - Total jobs
+        - Jobs collected today
+        - Unique companies
+        - Unique locations
+        - Unique sources
+        """
+
+        try:
+
+            # -----------------------------
+            # Total Jobs
+            # -----------------------------
+
+            self.cursor.execute(
+                """
+                SELECT COUNT(*)
+                FROM jobs
+                """
+            )
+
+            total_jobs = (
+                self.cursor.fetchone()[0]
+            )
+
+            # -----------------------------
+            # Jobs Collected Today
+            # -----------------------------
+
+            self.cursor.execute(
+                """
+                SELECT COUNT(*)
+                FROM jobs
+                WHERE DATE(scraped_date)
+                = CURRENT_DATE
+                """
+            )
+
+            jobs_today = (
+                self.cursor.fetchone()[0]
+            )
+
+            # -----------------------------
+            # Total Companies
+            # -----------------------------
+
+            self.cursor.execute(
+                """
+                SELECT COUNT(
+                   DISTINCT company
+                )
+                FROM jobs
+                """
+            )
+
+            companies = (
+                self.cursor.fetchone()[0]
+            )
+
+            # -----------------------------
+            # Total Locations
+            # -----------------------------
+
+            self.cursor.execute(
+                """
+                SELECT COUNT(
+                   DISTINCT location
+                )
+                FROM jobs
+                """
+            )
+
+            locations = (
+                self.cursor.fetchone()[0]
+            )
+
+            # -----------------------------
+            # Total Sources
+            # -----------------------------
+
+            self.cursor.execute(
+                """
+                SELECT COUNT(
+                   DISTINCT source
+                )
+                FROM jobs
+                """
+            )
+
+            sources = (
+                self.cursor.fetchone()[0]
+            )
+
+            return {
+                "total_jobs":
+                total_jobs,
+
+                "jobs_today":
+                jobs_today,
+
+                "companies":
+                companies,
+
+                "locations":
+                locations,
+
+                "sources":
+                sources
+            }
+
+        except Exception as error:
+
+            logger.error(
+                f"Statistics failed: {error}"
+            )
+
+            return {}
+
+    # -----------------------------------------
     # Get Jobs By Source
     # -----------------------------------------
 

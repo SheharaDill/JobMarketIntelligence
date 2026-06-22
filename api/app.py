@@ -129,6 +129,74 @@ def analytics():
     }
 
 # -----------------------------------
+# Platform Statistics
+# -----------------------------------
+#
+# Returns overall platform metrics.
+#
+# URL:
+# http://127.0.0.1:5000/stats
+#
+# -----------------------------------
+
+
+@app.route("/stats")
+def statistics():
+
+    db = PostgreSQLDatabaseManager()
+
+    stats = db.get_statistics()
+
+    db.close()
+
+    return stats
+# -----------------------------------
+# Recent Jobs
+# -----------------------------------
+#
+# Example:
+#
+# /jobs/recent/30
+#
+# Returns jobs collected
+# within the last N days.
+#
+# -----------------------------------
+
+
+@app.route(
+    "/jobs/recent/<int:days>"
+)
+def recent_jobs(
+    days
+):
+
+    db = PostgreSQLDatabaseManager()
+
+    rows = db.get_recent_jobs(
+        days
+    )
+
+    jobs = []
+
+    for row in rows:
+
+        jobs.append(
+            {
+                "title": row[0],
+                "company": row[1],
+                "location": row[2],
+                "source": row[3],
+                "scraped_date": str(
+                    row[4]
+                )
+            }
+        )
+
+    db.close()
+
+    return jobs
+# -----------------------------------
 # Get Latest Jobs
 # -----------------------------------
 # Returns the most recent
