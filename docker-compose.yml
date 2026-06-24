@@ -1,0 +1,124 @@
+# --------------------------------------------------
+# Docker Compose Configuration
+# --------------------------------------------------
+#
+# Purpose:
+#
+# Start the entire Job Market
+# Intelligence platform.
+#
+# Includes:
+#
+# - PostgreSQL Database
+# - Job Market Intelligence App
+#
+# Equivalent to:
+#
+# PostgreSQL
+# +
+# python main.py
+#
+# --------------------------------------------------
+
+services:
+
+  # ----------------------------------------
+  # PostgreSQL Database
+  # ----------------------------------------
+
+  postgres:
+
+    # Official PostgreSQL image
+
+    image: postgres:16
+
+    # Container name
+
+    container_name: job-market-postgres
+
+    # Database configuration
+
+    environment:
+
+      POSTGRES_DB: job_market_intelligence
+
+      POSTGRES_USER: postgres
+
+      POSTGRES_PASSWORD: postgres123
+
+    # Persist database files
+
+    volumes:
+
+      - postgres_data:/var/lib/postgresql/data
+
+    # Expose PostgreSQL
+
+    ports:
+
+      - "5432:5432"
+
+    # Restart automatically
+
+    restart: unless-stopped
+
+  # ----------------------------------------
+  # Main Application
+  # ----------------------------------------
+
+  job-market-intelligence:
+
+    # Build image using Dockerfile
+
+    build: .
+
+    # Container name
+
+    container_name: job-market-intelligence
+
+    # Load environment variables
+
+    env_file:
+
+      - .env
+
+    # Start only after database
+
+    depends_on:
+
+      - postgres
+
+    # Override database host
+    # so container uses PostgreSQL
+    # container instead of localhost
+
+    environment:
+
+      POSTGRES_HOST: postgres
+
+      POSTGRES_PORT: 5432
+
+      POSTGRES_DATABASE: job_market_intelligence
+
+      POSTGRES_USER: postgres
+
+      POSTGRES_PASSWORD: postgres123
+
+    # Restart automatically
+    # if container crashes
+
+    restart: unless-stopped
+
+    # Expose Flask API
+
+    ports:
+
+      - "5000:5000"
+
+# ----------------------------------------
+# Persistent Volumes
+# ----------------------------------------
+
+volumes:
+
+  postgres_data:

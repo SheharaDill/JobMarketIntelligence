@@ -70,6 +70,8 @@ class PostgreSQLDatabaseManager:
                 self.connection.cursor()
             )
 
+            self.create_tables()
+
             logger.info(
                 "PostgreSQL connection established."
             )
@@ -81,6 +83,55 @@ class PostgreSQLDatabaseManager:
             )
 
             raise
+    # -----------------------------------------
+    # Create Tables
+    # -----------------------------------------
+
+    def create_tables(self):
+        """
+        Create required tables
+        if they do not exist.
+        """
+
+        try:
+
+            self.cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS jobs
+                (
+                   id SERIAL PRIMARY KEY,
+
+                   title TEXT,
+
+                   company TEXT,
+
+                   location TEXT,
+
+                   salary TEXT,
+
+                   url TEXT UNIQUE,
+
+                   source TEXT,
+
+                   scraped_date TIMESTAMP
+                   DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+
+            self.connection.commit()
+
+            logger.info(
+                "Database tables verified."
+            )
+
+        except Exception as error:
+
+            logger.error(
+                f"Table creation failed: {error}"
+            )
+
+            self.connection.rollback()
 
     # -----------------------------------------
     # Count Jobs
@@ -195,7 +246,15 @@ class PostgreSQLDatabaseManager:
 
             self.cursor.execute(
                 """
-                SELECT *
+                SELECT
+                   id,
+                   title,
+                   company,
+                   location,
+                   salary,
+                   url,
+                   source,
+                   scraped_date
                 FROM jobs
                 ORDER BY scraped_date DESC
                 """
@@ -486,7 +545,11 @@ class PostgreSQLDatabaseManager:
 
             self.cursor.execute(
                 """
-                SELECT *
+                SELECT
+                   title,
+                   company,
+                   location,
+                   source
                 FROM jobs
                 WHERE company ILIKE %s
                 ORDER BY id DESC
@@ -526,7 +589,11 @@ class PostgreSQLDatabaseManager:
 
             self.cursor.execute(
                 """
-                SELECT *
+                SELECT
+                    title,
+                    company,
+                    location,
+                    source
                 FROM jobs
                 WHERE location ILIKE %s
                 ORDER BY id DESC

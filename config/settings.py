@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-print("settings.py loaded")
+
 # Website Configuration
 BASE_URL = "https://remoteok.com"
 
@@ -56,7 +56,7 @@ CSV_EXPORT_PATH = "output/jobs.csv"
 LOG_FILE = "logs/application.log"
 
 # Browser Settings
-HEADLESS_MODE = False
+HEADLESS_MODE = True
 
 # Job Search Keywords
 KEYWORDS = [

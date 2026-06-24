@@ -18,8 +18,8 @@ Phase 3 - Automation & Monitoring
 
 # APScheduler background scheduler.
 
-from apscheduler.schedulers.blocking import (
-    BlockingScheduler
+from apscheduler.schedulers.background import (
+    BackgroundScheduler
 )
 
 # Multi-site scraping runner.
@@ -126,7 +126,7 @@ def start_scheduler():
     Configure APScheduler jobs.
     """
 
-    scheduler = BlockingScheduler()
+    scheduler = BackgroundScheduler()
 
     # ---------------------------------
     # Daily Scraping
@@ -140,26 +140,32 @@ def start_scheduler():
 # ---------------------------------
 
     # scheduler.add_job(
-    #    daily_job_collection,
+    #   daily_job_collection,
     #   trigger="interval",
     #   minutes=1
-   # )
+    # )
 
 # ---------------------------------
 # Test Email Every 2 Minutes
 # ---------------------------------
 
-   # scheduler.add_job(
-    #  daily_email_report,
-    #   trigger="interval",
+    # scheduler.add_job(
+    #   daily_email_report,
+    #  trigger="interval",
     #  minutes=2
    # )
 
+    # scheduler.add_job(
+    #  daily_job_collection,
+    #   trigger="cron",
+    #  hour=9,
+    #   minute=0
+   # )
     scheduler.add_job(
         daily_job_collection,
-        trigger="cron",
-        hour=9,
-        minute=0
+        trigger="interval",
+        hours=6,
+        max_instances=1
     )
 
     # ---------------------------------
@@ -169,11 +175,18 @@ def start_scheduler():
     # Gives scrapers time to finish.
     # ---------------------------------
 
+    # scheduler.add_job(
+    #  daily_email_report,
+    #  trigger="cron",
+    # hour=9,
+    #  minute=5
+   # )
     scheduler.add_job(
         daily_email_report,
         trigger="cron",
-        hour=9,
-        minute=5
+        hour=8,
+        minute=0,
+        max_instances=1
     )
 
     print()
@@ -193,11 +206,11 @@ def start_scheduler():
     print()
 
     print(
-        "Daily Scraping : 09:00"
+        "Scraping       : Every 6 hours"
     )
 
     print(
-        "Daily Report   : 09:05"
+        "Email Report   : Daily at 08:00"
     )
 
     print()

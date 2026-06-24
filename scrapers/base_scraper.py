@@ -1,20 +1,36 @@
 """
 Base Scraper
-------------
-Provides common Selenium functionality
-for all scraper classes.
+============
+
+Provides common Selenium functionality for all scraper classes.
+
+Features
+--------
+- Headless mode support
+- Docker compatibility
+- Linux compatibility
+- Windows compatibility
+- Shared browser utilities
+- Logging support
+
+Used By
+-------
+- RemoteOK scraper
+- WeWorkRemotely scraper
+- Future job board scrapers
 """
 
+# ==========================================================
+# Imports
+# ==========================================================
+
+import os
+
 from selenium import webdriver
-
 from selenium.webdriver.chrome.service import Service
-
 from selenium.webdriver.chrome.options import Options
-
 from selenium.webdriver.support.ui import WebDriverWait
-
 from webdriver_manager.chrome import ChromeDriverManager
-
 from config.settings import (
     IMPLICIT_WAIT,
     EXPLICIT_WAIT,
@@ -24,59 +40,105 @@ from config.settings import (
 from utils.logger import logger
 
 
+# ==========================================================
+# Base Scraper Class
+# ==========================================================
+
 class BaseScraper:
     """
     Parent class for all scrapers.
     """
 
     def __init__(self):
-        """
-        Initialize Selenium WebDriver.
-        """
 
         self.driver = None
-
         self.wait = None
 
         self.initialize_driver()
 
-    # ------------------------------------
+    # ======================================================
     # Driver Setup
-    # ------------------------------------
+    # ======================================================
+
     def initialize_driver(self):
-        """
-        Configure Chrome browser.
-        """
 
         try:
 
+            logger.info(
+                "Initializing Chrome WebDriver..."
+            )
+
             chrome_options = Options()
 
-            if HEADLESS_MODE:
-                chrome_options.add_argument(
-                    "--headless=new"
+            # --------------------------------------------------
+            # Chrome Binary
+            # --------------------------------------------------
+
+            if os.path.exists("/usr/bin/google-chrome"):
+
+                chrome_options.binary_location = (
+                    "/usr/bin/google-chrome"
                 )
 
+                logger.info(
+                    "Using Linux Chrome binary."
+                )
+
+            # --------------------------------------------------
+            # Headless
+            # --------------------------------------------------
+
             chrome_options.add_argument(
-                "--start-maximized"
+                "--headless=new"
+            )
+
+            # --------------------------------------------------
+            # Docker-safe flags
+            # --------------------------------------------------
+
+            chrome_options.add_argument(
+                "--no-sandbox"
             )
 
             chrome_options.add_argument(
-                "--disable-notifications"
+                "--disable-dev-shm-usage"
             )
 
             chrome_options.add_argument(
-                "--disable-popup-blocking"
+                "--disable-gpu"
             )
 
-            service = Service(
-                ChromeDriverManager().install()
+            chrome_options.add_argument(
+                "--window-size=1920,1080"
             )
+
+            # --------------------------------------------------
+            # Use installed ChromeDriver
+            #
+            # This is the exact driver path that worked
+            # in your container test.
+            # --------------------------------------------------
+
+            driver_path = ChromeDriverManager().install()
+
+            logger.info(
+                f"Using ChromeDriver: {driver_path}"
+            )
+
+            service = Service(executable_path=driver_path)
+
+            # --------------------------------------------------
+            # Create browser
+            # --------------------------------------------------
 
             self.driver = webdriver.Chrome(
                 service=service,
                 options=chrome_options
             )
+
+            # --------------------------------------------------
+            # Waits
+            # --------------------------------------------------
 
             self.driver.implicitly_wait(
                 IMPLICIT_WAIT
@@ -88,7 +150,7 @@ class BaseScraper:
             )
 
             logger.info(
-                "Chrome browser initialized."
+                "Chrome browser initialized successfully."
             )
 
         except Exception as error:
@@ -99,13 +161,11 @@ class BaseScraper:
 
             raise
 
-    # ------------------------------------
+    # ======================================================
     # Open URL
-    # ------------------------------------
+    # ======================================================
+
     def open_url(self, url):
-        """
-        Open specified URL.
-        """
 
         try:
 
@@ -121,13 +181,11 @@ class BaseScraper:
                 f"Failed to open URL: {error}"
             )
 
-    # ------------------------------------
+    # ======================================================
     # Get Page Title
-    # ------------------------------------
+    # ======================================================
+
     def get_page_title(self):
-        """
-        Return page title.
-        """
 
         try:
 
@@ -141,13 +199,11 @@ class BaseScraper:
 
             return ""
 
-    # ------------------------------------
+    # ======================================================
     # Get Current URL
-    # ------------------------------------
+    # ======================================================
+
     def get_current_url(self):
-        """
-        Return current URL.
-        """
 
         try:
 
@@ -161,13 +217,11 @@ class BaseScraper:
 
             return ""
 
-    # ------------------------------------
-    # Close Browser
-    # ------------------------------------
+    # ======================================================
+    # Browser Cleanup
+    # ======================================================
+
     def close_browser(self):
-        """
-        Safely close browser.
-        """
 
         try:
 
@@ -176,7 +230,7 @@ class BaseScraper:
                 self.driver.quit()
 
                 logger.info(
-                    "Browser closed."
+                    "Browser closed successfully."
                 )
 
         except Exception as error:
