@@ -174,11 +174,20 @@ def main():
         #
         # ---------------------------------
 
-        scheduler_thread = (
-            threading.Thread(
-                target=start_scheduler,
-                daemon=True
-            )
+    #    scheduler_thread = (
+    #        threading.Thread(
+    #            target=start_scheduler,
+    #            daemon=True
+    #        )
+     #   )
+
+    #    print("Starting scheduler thread...")
+    #    scheduler_thread.start()
+    #    print("Scheduler thread started.")
+    #    start_scheduler()
+        scheduler_thread = threading.Thread(
+            target=start_scheduler,
+            daemon=True
         )
 
         scheduler_thread.start()

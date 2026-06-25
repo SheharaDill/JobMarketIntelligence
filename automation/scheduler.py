@@ -16,6 +16,7 @@ Phase 3 - Automation & Monitoring
 # Imports
 # -----------------------------------------
 
+
 # APScheduler background scheduler.
 
 from apscheduler.schedulers.background import (
@@ -122,11 +123,34 @@ def daily_email_report():
 # -----------------------------------------
 
 def start_scheduler():
+
+    import inspect
+
+    print("SCHEDULER FILE:")
+    print(inspect.getfile(start_scheduler))
     """
     Configure APScheduler jobs.
     """
+    try:
 
-    scheduler = BackgroundScheduler()
+        print("Scheduler function entered.")
+
+        from apscheduler.schedulers.background import BackgroundScheduler
+
+        print("Imported APScheduler")
+
+        print("About to create scheduler")
+
+        try:
+            print("Creating scheduler...")
+            scheduler = BackgroundScheduler()
+
+            print("BackgroundScheduler created.")
+        except Exception as e:
+            print("FAILED TO CREATE SCHEDULER")
+            print(type(e))
+            print(e)
+            raise
 
     # ---------------------------------
     # Daily Scraping
@@ -138,22 +162,25 @@ def start_scheduler():
     # ---------------------------------
 # Test Scraping Every 1 Minute
 # ---------------------------------
-
-    # scheduler.add_job(
-    #   daily_job_collection,
-    #   trigger="interval",
-    #   minutes=1
-    # )
+        print("Adding scrape job...")
+        scheduler.add_job(
+            daily_job_collection,
+            trigger="interval",
+            minutes=1,
+            id="test_scrape"
+        )
+        print("Scrape job added.")
 
 # ---------------------------------
 # Test Email Every 2 Minutes
 # ---------------------------------
-
-    # scheduler.add_job(
-    #   daily_email_report,
-    #  trigger="interval",
-    #  minutes=2
-   # )
+        print("Adding email job...")
+        scheduler.add_job(
+            daily_email_report,
+            trigger="interval",
+            minutes=2,
+            id="test_email"
+        )
 
     # scheduler.add_job(
     #  daily_job_collection,
@@ -161,12 +188,16 @@ def start_scheduler():
     #  hour=9,
     #   minute=0
    # )
-    scheduler.add_job(
-        daily_job_collection,
-        trigger="interval",
-        hours=6,
-        max_instances=1
-    )
+    #    print("Adding scrape job...")
+    #    scheduler.add_job(
+    #        daily_job_collection,
+    #        trigger="interval",
+    #        hours=6,
+    #        id="daily_scrape",
+    #        max_instances=1
+     #   )
+     #   print("Scrape job added.")
+    #    print("Job 1 registered.")
 
     # ---------------------------------
     # Daily Email Report
@@ -181,41 +212,67 @@ def start_scheduler():
     # hour=9,
     #  minute=5
    # )
-    scheduler.add_job(
-        daily_email_report,
-        trigger="cron",
-        hour=8,
-        minute=0,
-        max_instances=1
-    )
+    #    print("Adding email job...")
+    #    scheduler.add_job(
+    #        daily_email_report,
+    #        trigger="cron",
+    #        hour=8,
+    #        minute=0,
+    #        id="daily_email",
+    #        max_instances=1
+    #    )
+        print("Email job added.")
+        print("Job 2 registered.")
 
-    print()
+        print()
 
-    print("=" * 50)
+        print("=" * 50)
 
-    print(
-        "JOB MARKET INTELLIGENCE"
-    )
+        print(
+            "JOB MARKET INTELLIGENCE"
+        )
 
-    print(
-        "SCHEDULER RUNNING"
-    )
+        print(
+            "SCHEDULER RUNNING"
+        )
 
-    print("=" * 50)
+        print("=" * 50)
 
-    print()
+        print()
 
-    print(
-        "Scraping       : Every 6 hours"
-    )
+        print(
+            "Scraping       : Every 6 hours"
+        )
 
-    print(
-        "Email Report   : Daily at 08:00"
-    )
+        print(
+            "Email Report   : Daily at 08:00"
+        )
 
-    print()
+        print()
+        print("Starting APScheduler...")
 
-    scheduler.start()
+        scheduler.start()
+        print("Scheduler started.")
+        for job in scheduler.get_jobs():
+            print(
+                f"{job.id} | next run = {job.next_run_time}"
+            )
+        print("Scheduler started successfully.")
+
+        # keep thread alive forever
+        import time
+
+        while True:
+            time.sleep(60)
+    except Exception as error:
+
+        print()
+        print("SCHEDULER CRASHED")
+        print(type(error))
+        print("SCHEDULER CRASHED")
+        print(repr(error))
+        import traceback
+        traceback.print_exc()
 
 
 # -----------------------------------------
