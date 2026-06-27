@@ -52,8 +52,12 @@ class PostgreSQLDatabaseManager:
         """
 
         try:
-
+            print("Connecting to:")
+            print("HOST:", POSTGRES_HOST)
+            print("DB:", POSTGRES_DATABASE)
+            print("USER:", POSTGRES_USER)
             self.connection = psycopg2.connect(
+
 
                 host=POSTGRES_HOST,
 
@@ -65,6 +69,7 @@ class PostgreSQLDatabaseManager:
 
                 password=POSTGRES_PASSWORD
             )
+            print("CONNECTED SUCCESSFULLY")
 
             self.cursor = (
                 self.connection.cursor()
@@ -92,7 +97,7 @@ class PostgreSQLDatabaseManager:
         Create required tables
         if they do not exist.
         """
-
+        print("Creating tables...")
         try:
 
             self.cursor.execute(
@@ -121,11 +126,16 @@ class PostgreSQLDatabaseManager:
 
             self.connection.commit()
 
+            print("Tables created successfully!")
+
             logger.info(
                 "Database tables verified."
             )
 
         except Exception as error:
+
+            print("CREATE TABLE FAILED")
+            print(error)
 
             logger.error(
                 f"Table creation failed: {error}"

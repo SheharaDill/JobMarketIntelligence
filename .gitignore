@@ -20,4 +20,4 @@ output/*.csv
 .vscode/
 
 .env
-
+.env.aws
