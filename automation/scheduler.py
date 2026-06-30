@@ -166,7 +166,7 @@ def start_scheduler():
         scheduler.add_job(
             daily_job_collection,
             trigger="interval",
-            minutes=59,
+            minutes=10,
             id="test_scrape"
         )
         print("Scrape job added.")
@@ -178,7 +178,7 @@ def start_scheduler():
         scheduler.add_job(
             daily_email_report,
             trigger="interval",
-            minutes=59,
+            minutes=30,
             id="test_email"
         )
 
