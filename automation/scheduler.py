@@ -190,9 +190,11 @@ def start_scheduler():
    # )
         scheduler.add_job(
             daily_job_collection,
-            trigger="cron",
-            hour=9,
-            minute=0,
+            # trigger="cron",
+            trigger="interval",
+            minutes=1,
+            # hour=9,
+            # minute=0,
             id="daily_scrape",
             max_instances=1,
             coalesce=True
@@ -200,9 +202,11 @@ def start_scheduler():
 
         scheduler.add_job(
             daily_email_report,
-            trigger="cron",
-            hour=9,
-            minute=5,
+            trigger="interval",
+            # trigger="cron",
+            minutes=2,
+            # hour=9,
+            # minute=5,
             id="daily_email",
             max_instances=1,
             coalesce=True
