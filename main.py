@@ -186,12 +186,32 @@ def main():
     #    print("Scheduler thread started.")
     #    start_scheduler()
 
+        def scheduler_runner():
+
+            print("=== Scheduler thread entered ===")
+
+            try:
+
+                start_scheduler()
+
+            except Exception as e:
+
+                import traceback
+
+                print("=== Scheduler thread crashed ===")
+
+                traceback.print_exc()
+
         scheduler_thread = threading.Thread(
             target=start_scheduler,
             daemon=True
         )
 
+        print("Launching scheduler thread...")
+
         scheduler_thread.start()
+
+        print("Scheduler alive:", scheduler_thread.is_alive())
 
     #    start_scheduler()
 
