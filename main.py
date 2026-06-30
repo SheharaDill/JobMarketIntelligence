@@ -185,12 +185,15 @@ def main():
     #    scheduler_thread.start()
     #    print("Scheduler thread started.")
     #    start_scheduler()
-        scheduler_thread = threading.Thread(
-            target=start_scheduler,
-            daemon=True
-        )
 
-        scheduler_thread.start()
+    #    scheduler_thread = threading.Thread(
+    #        target=start_scheduler,
+    #        daemon=True
+    #    )
+
+    #    scheduler_thread.start()
+
+        start_scheduler()
 
         # ---------------------------------
         # Flask API
