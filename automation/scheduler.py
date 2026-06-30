@@ -162,25 +162,25 @@ def start_scheduler():
     # ---------------------------------
 # Test Scraping Every 1 Minute
 # ---------------------------------
-        print("Adding scrape job...")
-        scheduler.add_job(
-            daily_job_collection,
-            trigger="interval",
-            minutes=1,
-            id="test_scrape"
-        )
-        print("Scrape job added.")
+    #    print("Adding scrape job...")
+    #    scheduler.add_job(
+    #        daily_job_collection,
+    #        trigger="interval",
+    #        minutes=1,
+    #        id="test_scrape"
+    #    )
+    #    print("Scrape job added.")
 
 # ---------------------------------
 # Test Email Every 2 Minutes
 # ---------------------------------
-        print("Adding email job...")
-        scheduler.add_job(
-            daily_email_report,
-            trigger="interval",
-            minutes=2,
-            id="test_email"
-        )
+    #    print("Adding email job...")
+    #    scheduler.add_job(
+    #        daily_email_report,
+    #        trigger="interval",
+    #        minutes=2,
+    #        id="test_email"
+    #    )
 
     # scheduler.add_job(
     #  daily_job_collection,
@@ -188,6 +188,25 @@ def start_scheduler():
     #  hour=9,
     #   minute=0
    # )
+        scheduler.add_job(
+            daily_job_collection,
+            trigger="cron",
+            hour=9,
+            minute=0,
+            id="daily_scrape",
+            max_instances=1,
+            coalesce=True
+        )
+
+        scheduler.add_job(
+            daily_email_report,
+            trigger="cron",
+            hour=9,
+            minute=5,
+            id="daily_email",
+            max_instances=1,
+            coalesce=True
+        )
     #    print("Adding scrape job...")
     #    scheduler.add_job(
     #        daily_job_collection,

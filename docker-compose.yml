@@ -72,7 +72,7 @@ services:
 
     build: .
 
-    #init: true
+    init: true
 
     # Container name
 
