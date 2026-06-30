@@ -72,6 +72,8 @@ services:
 
     build: .
 
+    init: true
+
     # Container name
 
     container_name: job-market-intelligence
