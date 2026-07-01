@@ -196,9 +196,11 @@ def main():
                 start_scheduler()
                 print("=== start_scheduler() returned ===")
 
-            except Exception as e:
+            except BaseException as e:
 
                 print("=== Scheduler thread crashed ===")
+                print(type(e))
+                print(repr(e))
 
                 traceback.print_exc()
             print("=== Scheduler thread exiting ===")

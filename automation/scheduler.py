@@ -148,8 +148,11 @@ def start_scheduler():
             scheduler = BackgroundScheduler()
 
             print("BackgroundScheduler created.")
-        except Exception as e:
+            print("Reached point A")
+        except BaseException as e:
             print("FAILED TO CREATE SCHEDULER")
+            print(type(e))
+            print(repr(e))
             import traceback
             traceback.print_exc()
             raise
@@ -164,7 +167,37 @@ def start_scheduler():
     # Change time as desired.
     # ---------------------------------
 
-    # ---------------------------------
+        print("Registering scrape job...")
+        scheduler.add_job(
+            daily_job_collection,
+            # trigger="cron",
+            trigger="interval",
+            minutes=1,
+            # hour=9,
+            # minute=0,
+            id="daily_scrape",
+            max_instances=1,
+            coalesce=True
+        )
+        print("Reached point B")
+        print("Scrape job registered.")
+
+        print("Registering email job...")
+        scheduler.add_job(
+            daily_email_report,
+            trigger="interval",
+            # trigger="cron",
+            minutes=2,
+            # hour=9,
+            # minute=5,
+            id="daily_email",
+            max_instances=1,
+            coalesce=True
+        )
+        print("Reached point C")
+        print("Email job registered.")
+
+        # ---------------------------------
 # Test Scraping Every 1 Minute
 # ---------------------------------
     #    print("Adding scrape job...")
@@ -193,33 +226,7 @@ def start_scheduler():
     #  hour=9,
     #   minute=0
    # )
-        print("Registering scrape job...")
-        scheduler.add_job(
-            daily_job_collection,
-            # trigger="cron",
-            trigger="interval",
-            minutes=1,
-            # hour=9,
-            # minute=0,
-            id="daily_scrape",
-            max_instances=1,
-            coalesce=True
-        )
-        print("Scrape job registered.")
 
-        print("Registering email job...")
-        scheduler.add_job(
-            daily_email_report,
-            trigger="interval",
-            # trigger="cron",
-            minutes=2,
-            # hour=9,
-            # minute=5,
-            id="daily_email",
-            max_instances=1,
-            coalesce=True
-        )
-        print("Email job registered.")
     #    print("Adding scrape job...")
     #    scheduler.add_job(
     #        daily_job_collection,
@@ -285,6 +292,7 @@ def start_scheduler():
 
         print("About to start scheduler...")
         scheduler.start()
+        print("Reached point E")
         print("Scheduler started.")
         for job in scheduler.get_jobs():
             print(
