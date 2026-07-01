@@ -188,6 +188,7 @@ def main():
 
         def scheduler_runner():
 
+            import traceback
             print("=== Scheduler thread entered ===")
 
             try:
@@ -196,14 +197,13 @@ def main():
 
             except Exception as e:
 
-                import traceback
-
                 print("=== Scheduler thread crashed ===")
 
                 traceback.print_exc()
 
         scheduler_thread = threading.Thread(
-            target=start_scheduler,
+            # target=start_scheduler,
+            target=scheduler_runner,
             daemon=True
         )
 

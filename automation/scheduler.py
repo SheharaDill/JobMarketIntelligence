@@ -188,6 +188,7 @@ def start_scheduler():
     #  hour=9,
     #   minute=0
    # )
+        print("Registering scrape job...")
         scheduler.add_job(
             daily_job_collection,
             # trigger="cron",
@@ -199,7 +200,9 @@ def start_scheduler():
             max_instances=1,
             coalesce=True
         )
+        print("Scrape job registered.")
 
+        print("Registering email job...")
         scheduler.add_job(
             daily_email_report,
             trigger="interval",
@@ -211,6 +214,7 @@ def start_scheduler():
             max_instances=1,
             coalesce=True
         )
+        print("Email job registered.")
     #    print("Adding scrape job...")
     #    scheduler.add_job(
     #        daily_job_collection,
