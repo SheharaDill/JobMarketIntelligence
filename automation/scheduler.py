@@ -141,16 +141,21 @@ def start_scheduler():
 
         print("About to create scheduler")
 
+        print("Creating scheduler...")
+
         try:
-            print("Creating scheduler...")
+
             scheduler = BackgroundScheduler()
 
             print("BackgroundScheduler created.")
         except Exception as e:
             print("FAILED TO CREATE SCHEDULER")
-            print(type(e))
-            print(e)
+            import traceback
+            traceback.print_exc()
             raise
+            # print(type(e))
+            # print(e)
+            # raise
 
     # ---------------------------------
     # Daily Scraping
@@ -278,6 +283,7 @@ def start_scheduler():
         print()
         print("Starting APScheduler...")
 
+        print("About to start scheduler...")
         scheduler.start()
         print("Scheduler started.")
         for job in scheduler.get_jobs():
