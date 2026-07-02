@@ -1,15 +1,13 @@
 """
 Platform Launcher
 -----------------
-Starts the entire Job Market Intelligence
-platform.
+Starts the entire Job Market Intelligence platform.
 
 Startup Sequence:
 
 1. Run initial scraping
-2. Start Scheduler
-3. Start Flask API
-4. Keep platform running
+2. Start Flask API
+3. (Scheduler temporarily disabled)
 
 Usage:
 
@@ -20,17 +18,16 @@ Usage:
 # Imports
 # -----------------------------------------
 
-from multiprocessing import Process
+import threading
 
-from scrapers.run_all_scrapers import (
-    run_all_scrapers
-)
+from scrapers.run_all_scrapers import run_all_scrapers
 
 from api.app import app
 
-from automation.scheduler import (
-    start_scheduler
-)
+# Scheduler is temporarily disabled.
+# It can be re-enabled later.
+#
+# from automation.scheduler import start_scheduler
 
 
 # -----------------------------------------
@@ -38,9 +35,6 @@ from automation.scheduler import (
 # -----------------------------------------
 
 def start_api():
-    """
-    Start Flask API server.
-    """
 
     print()
     print("=" * 50)
@@ -60,10 +54,6 @@ def start_api():
 # -----------------------------------------
 
 def initial_scrape():
-    """
-    Collect fresh jobs immediately
-    when the platform starts.
-    """
 
     print()
     print("=" * 50)
@@ -83,80 +73,62 @@ def initial_scrape():
 # -----------------------------------------
 
 def main():
-    """
-    Launch the platform.
-
-    Sequence
-
-    1. Initial scrape
-    2. Scheduler process
-    3. Flask API process
-    """
 
     try:
 
         # ---------------------------------
-        # Initial Scrape
+        # Initial Data Collection
         # ---------------------------------
 
         initial_scrape()
 
         # ---------------------------------
-        # Scheduler Process
+        # Scheduler
         # ---------------------------------
-
-        print()
-        print("=" * 50)
-        print("STARTING SCHEDULER PROCESS")
-        print("=" * 50)
-
-    #    scheduler_process = Process(
-    #        target=start_scheduler,
-    #        name="SchedulerProcess"
-    #    )
-        import subprocess
-        import sys
-
-        print("Starting scheduler subprocess...")
-
-        scheduler_process = subprocess.Popen(
-            [sys.executable, "-u", "automation/scheduler.py"]
-        )
-
-        print("Scheduler PID:", scheduler_process.pid)
-
-    #    scheduler_process.start()
-
-        print(
-            f"Scheduler PID: {scheduler_process.pid}"
-        )
-
-        # ---------------------------------
-        # Flask API Process
-        # ---------------------------------
-
-        print()
-        print("=" * 50)
-        print("STARTING API PROCESS")
-        print("=" * 50)
-
-        api_process = Process(
-            target=start_api,
-            name="FlaskProcess"
-        )
-
-        api_process.start()
-
-        print(
-            f"Flask PID: {api_process.pid}"
-        )
+        #
+        # TEMPORARILY DISABLED
+        #
+        # Uncomment later when scheduler
+        # issue is resolved.
+        #
+        # def scheduler_runner():
+        #
+        #     import traceback
+        #     print("=== Scheduler thread entered ===")
+        #
+        #     try:
+        #
+        #         start_scheduler()
+        #         print("=== start_scheduler() returned ===")
+        #
+        #     except BaseException:
+        #
+        #         print("=== Scheduler thread crashed ===")
+        #         traceback.print_exc()
+        #
+        #     print("=== Scheduler thread exiting ===")
+        #
+        #
+        # print()
+        # print("=" * 50)
+        # print("STARTING SCHEDULER")
+        # print("=" * 50)
+        #
+        # scheduler_thread = threading.Thread(
+        #     target=scheduler_runner,
+        #     daemon=False,
+        #     name="SchedulerThread"
+        # )
+        #
+        # scheduler_thread.start()
+        #
+        # print("Scheduler launched.")
 
         # ---------------------------------
-        # Wait forever
+        # Flask API
         # ---------------------------------
 
-        scheduler_process.join()
-        api_process.join()
+        start_api()
 
     except KeyboardInterrupt:
 
