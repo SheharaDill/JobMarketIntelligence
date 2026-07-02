@@ -110,12 +110,22 @@ def main():
         print("STARTING SCHEDULER PROCESS")
         print("=" * 50)
 
-        scheduler_process = Process(
-            target=start_scheduler,
-            name="SchedulerProcess"
+    #    scheduler_process = Process(
+    #        target=start_scheduler,
+    #        name="SchedulerProcess"
+    #    )
+        import subprocess
+        import sys
+
+        print("Starting scheduler subprocess...")
+
+        scheduler_process = subprocess.Popen(
+            [sys.executable, "-u", "automation/scheduler.py"]
         )
 
-        scheduler_process.start()
+        print("Scheduler PID:", scheduler_process.pid)
+
+    #    scheduler_process.start()
 
         print(
             f"Scheduler PID: {scheduler_process.pid}"
