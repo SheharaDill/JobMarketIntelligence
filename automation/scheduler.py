@@ -126,6 +126,12 @@ def start_scheduler():
     """
     Configure APScheduler jobs.
     """
+    import threading
+
+    print(
+        "Running on thread:",
+        threading.current_thread().name
+    )
 
     import traceback
 

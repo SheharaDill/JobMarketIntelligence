@@ -205,17 +205,26 @@ def main():
                 traceback.print_exc()
             print("=== Scheduler thread exiting ===")
 
+        print("Launching scheduler thread...")
         scheduler_thread = threading.Thread(
             # target=start_scheduler,
             target=scheduler_runner,
-            daemon=True
+            # daemon=True,
+            daemon=False,
+            name="SchedulerThread"
         )
-
-        print("Launching scheduler thread...")
 
         scheduler_thread.start()
 
-        print("Scheduler alive:", scheduler_thread.is_alive())
+        import time
+
+        for i in range(10):
+            print(
+                f"[{i}] Scheduler alive: {scheduler_thread.is_alive()}"
+            )
+            time.sleep(1)
+
+            print("Scheduler alive:", scheduler_thread.is_alive())
 
     #    start_scheduler()
 
