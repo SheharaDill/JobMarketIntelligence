@@ -7,54 +7,26 @@ platform.
 Startup Sequence:
 
 1. Run initial scraping
-2. Start Flask API
-3. Start Scheduler
+2. Start Scheduler
+3. Start Flask API
 4. Keep platform running
 
 Usage:
 
     python main.py
-
-Purpose:
-
-Provides a single entry point
-for the entire platform.
-
-Instead of running:
-
-    python -m api.app
-
-and
-
-    python -m automation.scheduler
-
-separately,
-
-this launcher starts everything
-automatically.
 """
 
 # -----------------------------------------
 # Imports
 # -----------------------------------------
 
-# Threading allows the Flask API
-# and Scheduler to run at the
-# same time.
-
-import threading
-
-# Multi-source scraper runner.
+from multiprocessing import Process
 
 from scrapers.run_all_scrapers import (
     run_all_scrapers
 )
 
-# Flask application.
-
 from api.app import app
-
-# APScheduler launcher.
 
 from automation.scheduler import (
     start_scheduler
@@ -68,26 +40,12 @@ from automation.scheduler import (
 def start_api():
     """
     Start Flask API server.
-
-    API Endpoints:
-
-    /
-    /jobs
-    /analytics
-    /stats
     """
 
     print()
-
     print("=" * 50)
-
-    print(
-        "STARTING FLASK API"
-    )
-
+    print("STARTING FLASK API")
     print("=" * 50)
-
-    # Start Flask server.
 
     app.run(
         host="0.0.0.0",
@@ -105,34 +63,18 @@ def initial_scrape():
     """
     Collect fresh jobs immediately
     when the platform starts.
-
-    Purpose:
-
-    Ensures API users see the
-    latest available data before
-    the scheduler begins running.
     """
 
     print()
-
     print("=" * 50)
-
-    print(
-        "INITIAL SCRAPE STARTED"
-    )
-
+    print("INITIAL SCRAPE STARTED")
     print("=" * 50)
 
     run_all_scrapers()
 
     print()
-
     print("=" * 50)
-
-    print(
-        "INITIAL SCRAPE COMPLETE"
-    )
-
+    print("INITIAL SCRAPE COMPLETE")
     print("=" * 50)
 
 
@@ -142,125 +84,82 @@ def initial_scrape():
 
 def main():
     """
-    Launch the entire platform.
+    Launch the platform.
 
-    Sequence:
+    Sequence
 
-    1. Run initial scrape
-    2. Start scheduler
-    3. Start API
-    4. Keep platform running
+    1. Initial scrape
+    2. Scheduler process
+    3. Flask API process
     """
 
     try:
 
         # ---------------------------------
-        # Initial Data Collection
+        # Initial Scrape
         # ---------------------------------
 
         initial_scrape()
 
         # ---------------------------------
-        # Scheduler Thread
-        # ---------------------------------
-        #
-        # Runs APScheduler in the
-        # background.
-        #
-        # Handles:
-        #
-        # - Daily scraping
-        # - Email reporting
-        #
+        # Scheduler Process
         # ---------------------------------
 
-    #    scheduler_thread = (
-    #        threading.Thread(
-    #            target=start_scheduler,
-    #            daemon=True
-    #        )
-     #   )
+        print()
+        print("=" * 50)
+        print("STARTING SCHEDULER PROCESS")
+        print("=" * 50)
 
-    #    print("Starting scheduler thread...")
-    #    scheduler_thread.start()
-    #    print("Scheduler thread started.")
-    #    start_scheduler()
-
-        def scheduler_runner():
-
-            import traceback
-            print("=== Scheduler thread entered ===")
-
-            try:
-
-                start_scheduler()
-                print("=== start_scheduler() returned ===")
-
-            except BaseException as e:
-
-                print("=== Scheduler thread crashed ===")
-                # print(type(e))
-                # print(repr(e))
-
-                traceback.print_exc()
-            print("=== Scheduler thread exiting ===")
-
-        print("Launching scheduler thread...")
-        scheduler_thread = threading.Thread(
-            # target=start_scheduler,
-            target=scheduler_runner,
-            # daemon=True,
-            daemon=False,
-            name="SchedulerThread"
+        scheduler_process = Process(
+            target=start_scheduler,
+            name="SchedulerProcess"
         )
 
-        scheduler_thread.start()
+        scheduler_process.start()
 
-        import time
-
-        for i in range(10):
-            print(
-                f"[{i}] Scheduler alive: {scheduler_thread.is_alive()}"
-            )
-            time.sleep(1)
-
-            print("Scheduler alive:", scheduler_thread.is_alive())
-
-    #    start_scheduler()
+        print(
+            f"Scheduler PID: {scheduler_process.pid}"
+        )
 
         # ---------------------------------
-        # Flask API
-        # ---------------------------------
-        #
-        # Flask remains the primary
-        # foreground process.
-        #
+        # Flask API Process
         # ---------------------------------
 
-        start_api()
+        print()
+        print("=" * 50)
+        print("STARTING API PROCESS")
+        print("=" * 50)
+
+        api_process = Process(
+            target=start_api,
+            name="FlaskProcess"
+        )
+
+        api_process.start()
+
+        print(
+            f"Flask PID: {api_process.pid}"
+        )
+
+        # ---------------------------------
+        # Wait forever
+        # ---------------------------------
+
+        scheduler_process.join()
+        api_process.join()
 
     except KeyboardInterrupt:
 
         print()
-
         print("=" * 50)
-
-        print(
-            "PLATFORM STOPPED"
-        )
-
+        print("PLATFORM STOPPED")
         print("=" * 50)
 
     except Exception as error:
 
         print()
-
         print("=" * 50)
-
-        print(
-            f"PLATFORM ERROR: {error}"
-        )
-
+        print(f"PLATFORM ERROR: {error}")
         print("=" * 50)
 
 
@@ -269,5 +168,4 @@ def main():
 # -----------------------------------------
 
 if __name__ == "__main__":
-
     main()
