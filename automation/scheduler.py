@@ -168,14 +168,28 @@ def start_scheduler():
 
         print("Starting scheduler...")
         scheduler.start()
-        print("Scheduler started successfully")
 
+        print("Scheduler started successfully")
         for job in scheduler.get_jobs():
             print(f"{job.id} -> {job.next_run_time}")
 
+        import threading
         import time
+
         while True:
-            time.sleep(60)
+            print(
+                "Scheduler loop:",
+                scheduler.running,
+                threading.enumerate()
+            )
+            time.sleep(30)
+
+        # for job in scheduler.get_jobs():
+        #    print(f"{job.id} -> {job.next_run_time}")
+
+        # import time
+        # while True:
+            # time.sleep(60)
 
     except BaseException:
         print("===== START_SCHEDULER FAILED =====")
