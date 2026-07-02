@@ -144,24 +144,24 @@ def start_scheduler():
         # print("Creating scheduler...")
 
         try:
-            print("Creating fake scheduler...")
+            # print("Creating fake scheduler...")
 
-            import time
+            # import time
 
+           # print("Reached point A")
+
+            # time.sleep(5)
+
+            # print("Reached point B")
+
+            scheduler = BackgroundScheduler()
+
+            print("BackgroundScheduler created.")
             print("Reached point A")
-
-            time.sleep(5)
-
-            print("Reached point B")
-
-            # scheduler = BackgroundScheduler()
-
-            # print("BackgroundScheduler created.")
-            print("Reached point A")
-        except BaseException as e:
+        except Exception as e:
             print("FAILED TO CREATE SCHEDULER")
-            print(type(e))
-            print(repr(e))
+            # print(type(e))
+            # print(repr(e))
             import traceback
             traceback.print_exc()
             raise
