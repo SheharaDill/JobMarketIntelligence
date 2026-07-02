@@ -199,8 +199,8 @@ def main():
             except BaseException as e:
 
                 print("=== Scheduler thread crashed ===")
-                print(type(e))
-                print(repr(e))
+                # print(type(e))
+                # print(repr(e))
 
                 traceback.print_exc()
             print("=== Scheduler thread exiting ===")
