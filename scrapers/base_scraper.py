@@ -27,6 +27,7 @@ Used By
 import os
 
 from selenium import webdriver
+from selenium_stealth import stealth
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -88,9 +89,11 @@ class BaseScraper:
             # Headless
             # --------------------------------------------------
 
-            chrome_options.add_argument(
-                "--headless=new"
-            )
+        #    chrome_options.add_argument(
+        #        "--headless=new"
+        #    )
+
+            HEADLESS_MODE = False
 
             # --------------------------------------------------
             # Docker-safe flags
@@ -134,6 +137,15 @@ class BaseScraper:
             self.driver = webdriver.Chrome(
                 service=service,
                 options=chrome_options
+            )
+            stealth(
+                self.driver,
+                languages=["en-US", "en"],
+                vendor="Google Inc.",
+                platform="Win32",
+                webgl_vendor="Intel Inc.",
+                renderer="Intel Iris OpenGL Engine",
+                fix_hairline=True,
             )
 
             # --------------------------------------------------

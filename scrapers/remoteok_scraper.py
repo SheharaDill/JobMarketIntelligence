@@ -1,32 +1,26 @@
 """
 RemoteOK Scraper
 ----------------
-Scrapes jobs from RemoteOK
-and stores them in SQLite.
+Scrapes software engineering jobs from RemoteOK using
+the HTML elements on the page.
 """
 
 from selenium.webdriver.common.by import By
 
 from config.settings import BASE_URL
 from scrapers.base_scraper import BaseScraper
-from database.postgres_db_manager import (
-    PostgreSQLDatabaseManager
-)
+from database.postgres_db_manager import PostgreSQLDatabaseManager
 from utils.logger import logger
+import json
 
 
 class RemoteOKScraper(BaseScraper):
-    """
-    RemoteOK job scraper.
-    """
 
     def __init__(self):
 
         super().__init__()
 
-        self.database = (
-            PostgreSQLDatabaseManager()
-        )
+        self.database = PostgreSQLDatabaseManager()
 
     # -----------------------------------
     # Open Website
@@ -35,6 +29,12 @@ class RemoteOKScraper(BaseScraper):
     def open_site(self):
 
         self.open_url(BASE_URL)
+
+        # Optional: Save HTML for debugging
+        with open("remoteok.html", "w", encoding="utf-8") as f:
+            f.write(self.driver.page_source)
+
+        print("Saved HTML")
 
     # -----------------------------------
     # Scrape Jobs
@@ -45,127 +45,219 @@ class RemoteOKScraper(BaseScraper):
         jobs_processed = 0
         jobs_saved = 0
 
+        software_keywords = [
+            "software",
+            "engineer",
+            "developer",
+            "backend",
+            "back-end",
+            "frontend",
+            "front-end",
+            "full stack",
+            "fullstack",
+            "python",
+            "java",
+            "golang",
+            "go",
+            "rust",
+            "c++",
+            "c#",
+            ".net",
+            "ios",
+            "android",
+            "react",
+            "node",
+            "node.js",
+            "devops",
+            "platform",
+            "cloud",
+            "machine learning",
+            "ml",
+            "ai",
+            "data engineer",
+            "site reliability",
+            "sre",
+
+
+            "security engineer",
+        ]
+
         try:
 
-            job_count = len(
-                self.driver.find_elements(
-                    By.CSS_SELECTOR,
-                    "tr.job"
-                )
+            jobs = self.driver.find_elements(
+                By.CSS_SELECTOR,
+                "tr.job"
             )
 
-            logger.info(
-                f"{job_count} jobs found."
-            )
+            logger.info(f"{len(jobs)} job rows found.")
 
-            for index in range(job_count):
+            for job in jobs:
 
                 try:
 
-                    jobs = self.driver.find_elements(
+                    # -----------------------------------
+                    # Skip invalid rows
+                    # -----------------------------------
+
+                    job_id = job.get_attribute("data-id")
+
+                    if not job_id:
+                        continue
+
+                    # -----------------------------------
+                    # Title
+                    # -----------------------------------
+
+                    try:
+                        title = job.find_element(
+                            By.CSS_SELECTOR,
+                            "h2[itemprop='title']"
+                        ).text.strip()
+                    except Exception:
+                        continue
+
+                    # -----------------------------------
+                    # Software Filter
+                    # -----------------------------------
+
+                    title_lower = title.lower()
+
+                    if (
+                        "maintenance" in title_lower
+                        or "facility" in title_lower
+                        or "mechanical" in title_lower
+                        or "electrical" in title_lower
+                        or "civil" in title_lower
+                        or "construction" in title_lower
+                    ):
+                        continue
+
+                    if not any(
+                       keyword in title_lower
+                       for keyword in software_keywords
+                       ):
+                        continue
+
+                    # -----------------------------------
+                    # Company
+                    # -----------------------------------
+                    company = job.get_attribute("data-company")
+
+                    if not company:
+                        try:
+                            company = job.find_element(
+                                By.CSS_SELECTOR,
+                                "h3[itemprop='name']"
+                            ).text.strip()
+                        except Exception:
+                            company = "Unknown"
+                    print("\n====================")
+                    print("TITLE:", title)
+
+                    salary_elements = job.find_elements(
                         By.CSS_SELECTOR,
-                        "tr.job"
+                        "div.salary"
                     )
 
-                    if index >= len(jobs):
-                        break
+                    print("Salary elements found:", len(salary_elements))
 
-                    job = jobs[index]
+                    for s in salary_elements:
+                        print("Salary text:", s.text)
 
-                    # --------------------
-                    # Title
-                    # --------------------
+                    # -----------------------------------
+                    # Salary
+                    # -----------------------------------
 
-                    try:
-
-                        title = job.find_element(
-                            By.TAG_NAME,
-                            "h2"
-                        ).text.strip()
-
-                    except Exception:
-
-                        title = "Unknown"
-
-                    # --------------------
-                    # Company
-                    # --------------------
+                    salary = "Not Specified"
 
                     try:
 
-                        company = job.find_element(
-                            By.TAG_NAME,
-                            "h3"
-                        ).text.strip()
+                        script = job.find_element(
+                            By.CSS_SELECTOR,
+                            "script[type='application/ld+json']"
+                        )
+
+                        data = json.loads(
+                            script.get_attribute("innerHTML")
+                        )
+
+                        salary_info = data.get(
+                            "baseSalary",
+                            {}
+                        ).get(
+                            "value",
+                            {}
+                        )
+
+                        minimum = salary_info.get("minValue")
+                        maximum = salary_info.get("maxValue")
+
+                        if minimum and maximum:
+                            salary = f"${minimum:,} - ${maximum:,}"
 
                     except Exception:
 
-                        company = "Unknown"
+                        try:
+                            salary = job.find_element(
+                                By.CSS_SELECTOR,
+                                "div.salary"
+                            ).text.strip()
 
-                    # --------------------
+                        except Exception:
+                            pass
+
+                    # -----------------------------------
                     # Location
-                    # --------------------
+                    # -----------------------------------
 
-                    try:
+                    locations = []
 
-                        location = job.find_element(
-                            By.CLASS_NAME,
-                            "location"
-                        ).text.strip()
+                    for loc in job.find_elements(
+                        By.CSS_SELECTOR,
+                        "div.location"
+                    ):
 
-                    except Exception:
+                        text = loc.text.strip()
 
+                        if (
+                            text
+                            and "Contractor" not in text
+                            and "Full Time" not in text
+                            and "Part Time" not in text
+                            and "Internship" not in text
+                        ):
+                            locations.append(text)
+
+                    location = ", ".join(locations)
+
+                    if not location:
                         location = "Remote"
 
-                    # --------------------
-                    # Salary
-                    # --------------------
+                    # -----------------------------------
+                    # Job URL
+                    # -----------------------------------
 
-                    try:
+                    href = job.get_attribute("data-url")
 
-                        salary = job.find_element(
-                            By.CLASS_NAME,
-                            "salary"
-                        ).text.strip()
+                    if not href:
+                        href = job.get_attribute("data-href")
 
-                    except Exception:
+                    if href:
 
-                        salary = "Not Specified"
-
-                    # --------------------
-                    # URL
-                    # --------------------
-
-                    url = job.get_attribute(
-                        "data-href"
-                    )
-
-                    if url:
-
-                        url = (
-                            "https://remoteok.com"
-                            + url
-                        )
+                        if href.startswith("http"):
+                            url = href
+                        else:
+                            url = "https://remoteok.com" + href
 
                     else:
 
                         url = "Not Available"
 
-                    # --------------------
-                    # Skip Empty Records
-                    # --------------------
-
-                    if (
-                        title == "Unknown"
-                        and company == "Unknown"
-                    ):
-                        continue
+                    # -----------------------------------
+                    # Save Job
+                    # -----------------------------------
 
                     jobs_processed += 1
-
-                    # --------------------
-                    # Save To Database
-                    # --------------------
 
                     saved = self.database.insert_job(
                         title=title,
@@ -176,15 +268,14 @@ class RemoteOKScraper(BaseScraper):
                         source="RemoteOK"
                     )
 
+                    status = (
+                        "NEW"
+                        if saved
+                        else "DUPLICATE"
+                    )
+
                     if saved:
-
                         jobs_saved += 1
-
-                        status = "NEW"
-
-                    else:
-
-                        status = "DUPLICATE"
 
                     print(
                         f"[{jobs_processed}] "
@@ -196,35 +287,14 @@ class RemoteOKScraper(BaseScraper):
                 except Exception as error:
 
                     logger.warning(
-                        f"Job skipped: {error}"
+                        f"Skipped row: {error}"
                     )
 
-            print(
-                "\n========================"
-            )
-
-            print(
-                f"Jobs Processed: "
-                f"{jobs_processed}"
-            )
-
-            print(
-                f"Jobs Saved: "
-                f"{jobs_saved}"
-            )
-
-            print(
-                f"Duplicates: "
-                f"{jobs_processed - jobs_saved}"
-            )
-
-            print(
-                "========================\n"
-            )
-
-            logger.info(
-                f"{jobs_saved} jobs saved."
-            )
+            print("\n========================")
+            print(f"Jobs Processed : {jobs_processed}")
+            print(f"Jobs Saved     : {jobs_saved}")
+            print(f"Duplicates     : {jobs_processed - jobs_saved}")
+            print("========================\n")
 
         except Exception as error:
 

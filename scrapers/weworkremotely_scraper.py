@@ -1,3 +1,5 @@
+
+
 """
 We Work Remotely Scraper
 ------------------------
@@ -46,10 +48,14 @@ class WeWorkRemotelyScraper(BaseScraper):
         """
         Open We Work Remotely.
         """
-
+        import time
         self.open_url(
             "https://weworkremotely.com/top-trending-remote-jobs"
         )
+        time.sleep(8)
+
+        with open("wwr.html", "w", encoding="utf-8") as f:
+            f.write(self.driver.page_source)
 
     # -----------------------------------------
     # Scrape Jobs
