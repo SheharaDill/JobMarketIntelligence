@@ -6,8 +6,8 @@ Starts the entire Job Market Intelligence platform.
 Startup Sequence:
 
 1. Run initial scraping
-2. Start Flask API
-3. (Scheduler temporarily disabled)
+2. Start Scheduler
+3. Start Flask API
 
 Usage:
 
@@ -21,13 +21,8 @@ Usage:
 import threading
 
 from scrapers.run_all_scrapers import run_all_scrapers
-
 from api.app import app
-
-# Scheduler is temporarily disabled.
-# It can be re-enabled later.
-#
-# from automation.scheduler import start_scheduler
+from automation.scheduler import start_scheduler
 
 
 # -----------------------------------------
@@ -69,6 +64,29 @@ def initial_scrape():
 
 
 # -----------------------------------------
+# Scheduler Runner
+# -----------------------------------------
+
+def scheduler_runner():
+
+    import traceback
+
+    print("=== Scheduler thread entered ===")
+
+    try:
+
+        start_scheduler()
+
+    except BaseException:
+
+        print("=== Scheduler thread crashed ===")
+
+        traceback.print_exc()
+
+    print("=== Scheduler thread exiting ===")
+
+
+# -----------------------------------------
 # Main Platform Launcher
 # -----------------------------------------
 
@@ -85,44 +103,21 @@ def main():
         # ---------------------------------
         # Scheduler
         # ---------------------------------
-        #
-        # TEMPORARILY DISABLED
-        #
-        # Uncomment later when scheduler
-        # issue is resolved.
-        #
-        # def scheduler_runner():
-        #
-        #     import traceback
-        #     print("=== Scheduler thread entered ===")
-        #
-        #     try:
-        #
-        #         start_scheduler()
-        #         print("=== start_scheduler() returned ===")
-        #
-        #     except BaseException:
-        #
-        #         print("=== Scheduler thread crashed ===")
-        #         traceback.print_exc()
-        #
-        #     print("=== Scheduler thread exiting ===")
-        #
-        #
-        # print()
-        # print("=" * 50)
-        # print("STARTING SCHEDULER")
-        # print("=" * 50)
-        #
-        # scheduler_thread = threading.Thread(
-        #     target=scheduler_runner,
-        #     daemon=False,
-        #     name="SchedulerThread"
-        # )
-        #
-        # scheduler_thread.start()
-        #
-        # print("Scheduler launched.")
+
+        print()
+        print("=" * 50)
+        print("STARTING SCHEDULER")
+        print("=" * 50)
+
+        scheduler_thread = threading.Thread(
+            target=scheduler_runner,
+            daemon=True,
+            name="SchedulerThread"
+        )
+
+        scheduler_thread.start()
+
+        print("Scheduler launched successfully.")
 
         # ---------------------------------
         # Flask API
