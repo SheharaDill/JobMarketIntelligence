@@ -124,6 +124,40 @@ class PostgreSQLDatabaseManager:
                 """
             )
 
+            # ---------------------------------
+            # Skills Table
+            # ---------------------------------
+
+            self.cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS skills
+                (
+                    id SERIAL PRIMARY KEY,
+
+                    name TEXT UNIQUE NOT NULL
+                )
+                """
+            )
+
+            # ---------------------------------
+            # Job Skills Table
+            # ---------------------------------
+
+            self.cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS job_skills
+                (
+                   job_id INTEGER REFERENCES jobs(id)
+                   ON DELETE CASCADE,
+
+                   skill_id INTEGER REFERENCES skills(id)
+                   ON DELETE CASCADE,
+
+                   PRIMARY KEY(job_id, skill_id)
+                )
+                """
+            )
+
             self.connection.commit()
 
             print("Tables created successfully!")
@@ -217,6 +251,7 @@ class PostgreSQLDatabaseManager:
                 )
                 ON CONFLICT (url)
                 DO NOTHING
+                RETURNING id
                 """,
                 (
                     title,
@@ -228,9 +263,14 @@ class PostgreSQLDatabaseManager:
                 )
             )
 
+            row = self.cursor.fetchone()
+
             self.connection.commit()
 
-            return True
+            if row:
+                return row[0]
+
+            return None
 
         except Exception as error:
 
@@ -241,6 +281,145 @@ class PostgreSQLDatabaseManager:
             self.connection.rollback()
 
             return False
+    # -----------------------------------------
+    # Insert Skill
+    # -----------------------------------------
+
+    def insert_skill(
+        self,
+        skill
+    ):
+
+        try:
+
+            self.cursor.execute(
+                """
+                INSERT INTO skills(name)
+                VALUES (%s)
+                ON CONFLICT(name)
+                DO NOTHING
+                """,
+                (skill,)
+            )
+
+            self.connection.commit()
+
+        except Exception as error:
+
+            logger.error(
+                f"Insert skill failed: {error}"
+            )
+
+            self.connection.rollback()
+    # -----------------------------------------
+    # Get Skill ID
+    # -----------------------------------------
+
+    def get_skill_id(
+        self,
+        skill
+    ):
+
+        try:
+
+            self.cursor.execute(
+                """
+                SELECT id
+                FROM skills
+                WHERE name = %s
+                """,
+                (skill,)
+            )
+
+            row = self.cursor.fetchone()
+
+            if row:
+
+                return row[0]
+
+            return None
+
+        except Exception as error:
+
+            logger.error(
+                f"Skill lookup failed: {error}"
+            )
+
+            return None
+    # -----------------------------------------
+    # Link Job To Skill
+    # -----------------------------------------
+
+    def link_job_skill(
+        self,
+        job_id,
+        skill_id
+    ):
+
+        try:
+
+            self.cursor.execute(
+                """
+               INSERT INTO job_skills
+                (
+                   job_id,
+                   skill_id
+                )
+                VALUES
+                (
+                   %s,
+                   %s
+                )
+                ON CONFLICT DO NOTHING
+                """,
+                (
+                    job_id,
+                    skill_id
+                )
+            )
+
+            self.connection.commit()
+
+        except Exception as error:
+
+            logger.error(
+                f"Job skill link failed: {error}"
+            )
+
+            self.connection.rollback()
+
+    # -----------------------------------------
+    # Get Job ID By URL
+    # -----------------------------------------
+
+    def get_job_id_by_url(self, url):
+
+        try:
+
+            self.cursor.execute(
+                """
+                SELECT id
+                FROM jobs
+                WHERE url = %s
+                """,
+                (url,)
+            )
+
+            row = self.cursor.fetchone()
+
+            if row:
+
+                return row[0]
+
+            return None
+
+        except Exception as error:
+
+            logger.error(
+                f"Job lookup failed: {error}"
+            )
+
+            return None
 
     # -----------------------------------------
     # Get All Jobs

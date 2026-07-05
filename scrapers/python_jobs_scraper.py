@@ -21,6 +21,7 @@ from scrapers.base_scraper import BaseScraper
 from database.postgres_db_manager import (
     PostgreSQLDatabaseManager
 )
+from utils.skill_extractor import extract_skills
 
 
 # =====================================================
@@ -125,7 +126,7 @@ class PythonJobsScraper(BaseScraper):
 
                     jobs_processed += 1
 
-                    saved = self.database.insert_job(
+                    job_id = self.database.insert_job(
 
                         title=title,
 
@@ -140,15 +141,70 @@ class PythonJobsScraper(BaseScraper):
                         source="Python.org"
 
                     )
+                    if not job_id:
 
-                    status = (
-                        "NEW"
-                        if saved
-                        else "DUPLICATE"
-                    )
+                        job_id = self.database.get_job_id_by_url(href)
 
-                    if saved:
+                        status = "DUPLICATE"
+
+                    else:
+
                         jobs_saved += 1
+
+                        status = "NEW"
+
+                    print("Job ID:", job_id)
+
+                    # ------------------------------------
+                    # Extract Skills
+                    # ------------------------------------
+
+                    if job_id:
+
+                        skills = extract_skills(title)
+
+                        print("TITLE:", title)
+                        print("Extracted skills:", skills)
+
+                        for skill in skills:
+
+                            print("Saving skill:", skill)
+
+                        #    self.database.insert_skill(skill)
+
+                            skill_id = self.database.get_skill_id(skill)
+
+                            print("Skill ID:", skill_id)
+
+                            if not skill_id:
+
+                                self.database.insert_skill(skill)
+
+                                skill_id = self.database.get_skill_id(skill)
+
+                            if skill_id:
+
+                                self.database.link_job_skill(
+                                    job_id,
+                                    skill_id
+                                )
+
+            #            jobs_saved += 1
+
+            #            status = "NEW"
+
+            #        else:
+
+            #            status = "DUPLICATE"
+
+            #        status = (
+            #            "NEW"
+            #            if saved
+            #            else "DUPLICATE"
+            #        )
+
+            #        if saved:
+            #            jobs_saved += 1
 
                     print(
                         f"[{jobs_processed}] "

@@ -148,7 +148,7 @@ def start_scheduler():
         scheduler.add_job(
             daily_job_collection,
             trigger="interval",
-            minutes=1,
+            minutes=25,
             id="daily_scrape",
             max_instances=1,
             coalesce=True,
@@ -159,7 +159,7 @@ def start_scheduler():
         scheduler.add_job(
             daily_email_report,
             trigger="interval",
-            minutes=2,
+            minutes=30,
             id="daily_email",
             max_instances=1,
             coalesce=True,
