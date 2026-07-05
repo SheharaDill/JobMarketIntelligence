@@ -130,7 +130,7 @@ class WeWorkRemotelyScraper(BaseScraper):
                     # Save To Database
                     # --------------------
 
-                    saved = self.database.insert_job(
+                    job_id = self.database.insert_job(
                         title=title,
                         company=company,
                         location=location,
@@ -139,15 +139,26 @@ class WeWorkRemotelyScraper(BaseScraper):
                         source="WeWorkRemotely"
                     )
 
-                    if saved:
+                    if not job_id:
 
-                        jobs_saved += 1
-
-                        status = "NEW"
+                        job_id = self.database.get_job_id_by_url(url)
+                        status = "DUPLICATE"
 
                     else:
 
-                        status = "DUPLICATE"
+                        jobs_saved += 1
+                        status = "NEW"
+
+                    # ------------------------------------
+                    # Extract Skills
+                    # ------------------------------------
+
+                    if job_id:
+
+                        self.database.process_job_skills(
+                            job_id,
+                            title
+                        )
 
                     print(
                         f"[{jobs_processed}] "

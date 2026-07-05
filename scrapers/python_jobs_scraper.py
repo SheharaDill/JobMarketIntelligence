@@ -159,52 +159,10 @@ class PythonJobsScraper(BaseScraper):
                     # Extract Skills
                     # ------------------------------------
 
-                    if job_id:
-
-                        skills = extract_skills(title)
-
-                        print("TITLE:", title)
-                        print("Extracted skills:", skills)
-
-                        for skill in skills:
-
-                            print("Saving skill:", skill)
-
-                        #    self.database.insert_skill(skill)
-
-                            skill_id = self.database.get_skill_id(skill)
-
-                            print("Skill ID:", skill_id)
-
-                            if not skill_id:
-
-                                self.database.insert_skill(skill)
-
-                                skill_id = self.database.get_skill_id(skill)
-
-                            if skill_id:
-
-                                self.database.link_job_skill(
-                                    job_id,
-                                    skill_id
-                                )
-
-            #            jobs_saved += 1
-
-            #            status = "NEW"
-
-            #        else:
-
-            #            status = "DUPLICATE"
-
-            #        status = (
-            #            "NEW"
-            #            if saved
-            #            else "DUPLICATE"
-            #        )
-
-            #        if saved:
-            #            jobs_saved += 1
+                    self.database.process_job_skills(
+                        job_id,
+                        title
+                    )
 
                     print(
                         f"[{jobs_processed}] "

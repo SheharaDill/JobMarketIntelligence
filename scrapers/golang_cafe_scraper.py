@@ -78,7 +78,7 @@ class GolangCafeScraper(BaseScraper):
 
                     jobs_processed += 1
 
-                    saved = self.database.insert_job(
+                    job_id = self.database.insert_job(
 
                         title=title,
 
@@ -94,15 +94,21 @@ class GolangCafeScraper(BaseScraper):
 
                     )
 
-                    if saved:
+                    if not job_id:
+
+                        job_id = self.database.get_job_id_by_url(url)
+
+                        status = "DUPLICATE"
+                    else:
 
                         jobs_saved += 1
 
                         status = "NEW"
 
-                    else:
-
-                        status = "DUPLICATE"
+                    self.database.process_job_skills(
+                        job_id,
+                        title
+                    )
 
                     print(
                         f"[{jobs_processed}] "

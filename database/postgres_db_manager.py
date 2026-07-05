@@ -30,6 +30,8 @@ from config.settings import (
 
 from utils.logger import logger
 
+from utils.skill_extractor import extract_skills
+
 
 # -----------------------------------------
 # PostgreSQL Database Manager
@@ -280,7 +282,7 @@ class PostgreSQLDatabaseManager:
 
             self.connection.rollback()
 
-            return False
+            return None
     # -----------------------------------------
     # Insert Skill
     # -----------------------------------------
@@ -297,12 +299,18 @@ class PostgreSQLDatabaseManager:
                 INSERT INTO skills(name)
                 VALUES (%s)
                 ON CONFLICT(name)
-                DO NOTHING
+                DO UPDATE
+                SET name = EXCLUDED.name
+                RETURNING id
                 """,
                 (skill,)
             )
 
+            skill_id = self.cursor.fetchone()[0]
+
             self.connection.commit()
+
+            return skill_id
 
         except Exception as error:
 
@@ -311,6 +319,8 @@ class PostgreSQLDatabaseManager:
             )
 
             self.connection.rollback()
+
+            return None
     # -----------------------------------------
     # Get Skill ID
     # -----------------------------------------
@@ -387,6 +397,52 @@ class PostgreSQLDatabaseManager:
             )
 
             self.connection.rollback()
+
+    # -----------------------------------------
+    # Process Job Skills
+    # -----------------------------------------
+
+    def process_job_skills(
+        self,
+        job_id,
+        title
+    ):
+        """
+        Extract skills from a job title
+        and store relationships.
+        """
+        if not job_id:
+            return
+
+        skills = extract_skills(title)
+
+        print("TITLE:", title)
+        print("Extracted skills:", skills)
+
+        for skill in skills:
+
+            #    print("Saving skill:", skill)
+
+            skill_id = self.get_skill_id(skill)
+
+            print(
+                f"{skill} -> {skill_id}"
+            )
+
+        #    print("Skill ID:", skill_id)
+
+        #    if not skill_id:
+
+            #    self.insert_skill(skill)
+
+        #        skill_id = self.get_skill_id(skill)
+
+            if skill_id:
+
+                self.link_job_skill(
+                    job_id,
+                    skill_id
+                )
 
     # -----------------------------------------
     # Get Job ID By URL
