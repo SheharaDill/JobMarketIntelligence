@@ -32,6 +32,8 @@ from utils.logger import logger
 
 from utils.skill_extractor import extract_skills
 
+from utils.job_classifier import JobClassifier
+
 
 # -----------------------------------------
 # PostgreSQL Database Manager
@@ -52,6 +54,7 @@ class PostgreSQLDatabaseManager:
         Create PostgreSQL connection
         and cursor.
         """
+        self.classifier = JobClassifier()
 
         try:
             print("Connecting to:")
@@ -115,6 +118,10 @@ class PostgreSQLDatabaseManager:
                    location TEXT,
 
                    salary TEXT,
+
+                   description TEXT,
+
+                   job_category VARCHAR(100),
 
                    url TEXT UNIQUE,
 
@@ -218,6 +225,7 @@ class PostgreSQLDatabaseManager:
         company,
         location,
         salary,
+        description,
         url,
         source
     ):
@@ -230,6 +238,11 @@ class PostgreSQLDatabaseManager:
         """
 
         try:
+            job_category = self.classifier.classify(
+                title,
+                description
+            )
+            print(f"Category: {job_category}")
 
             self.cursor.execute(
                 """
@@ -239,6 +252,8 @@ class PostgreSQLDatabaseManager:
                     company,
                     location,
                     salary,
+                    description,
+                    job_category,
                     url,
                     source
                 )
@@ -249,10 +264,20 @@ class PostgreSQLDatabaseManager:
                     %s,
                     %s,
                     %s,
+                    %s,
+                    %s,
                     %s
                 )
                 ON CONFLICT (url)
-                DO NOTHING
+                DO UPDATE
+                SET
+                   title = EXCLUDED.title,
+                   company = EXCLUDED.company,
+                   location = EXCLUDED.location,
+                   salary = EXCLUDED.salary,
+                   description = EXCLUDED.description,
+                   job_category = EXCLUDED.job_category,
+                   source = EXCLUDED.source
                 RETURNING id
                 """,
                 (
@@ -260,6 +285,8 @@ class PostgreSQLDatabaseManager:
                     company,
                     location,
                     salary,
+                    description,
+                    job_category,
                     url,
                     source
                 )
@@ -306,11 +333,16 @@ class PostgreSQLDatabaseManager:
                 (skill,)
             )
 
-            skill_id = self.cursor.fetchone()[0]
+        #    skill_id = self.cursor.fetchone()[0]
 
+            row = self.cursor.fetchone()
             self.connection.commit()
 
-            return skill_id
+            if row:
+                return row[0]
+
+            return None
+        #    return skill_id
 
         except Exception as error:
 
@@ -405,7 +437,8 @@ class PostgreSQLDatabaseManager:
     def process_job_skills(
         self,
         job_id,
-        title
+        title,
+        description
     ):
         """
         Extract skills from a job title
@@ -414,7 +447,13 @@ class PostgreSQLDatabaseManager:
         if not job_id:
             return
 
-        skills = extract_skills(title)
+        # text = f"{title} {description}"
+        # skills = extract_skills(text)
+
+        skills = extract_skills(
+            title,
+            description
+        )
 
         print("TITLE:", title)
         print("Extracted skills:", skills)
@@ -424,6 +463,10 @@ class PostgreSQLDatabaseManager:
             #    print("Saving skill:", skill)
 
             skill_id = self.get_skill_id(skill)
+
+            if skill_id is None:
+
+                skill_id = self.insert_skill(skill)
 
             print(
                 f"{skill} -> {skill_id}"

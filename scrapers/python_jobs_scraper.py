@@ -22,11 +22,15 @@ from database.postgres_db_manager import (
     PostgreSQLDatabaseManager
 )
 from utils.skill_extractor import extract_skills
+from selenium.webdriver.common.by import By
 
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 # =====================================================
 # Scraper
 # =====================================================
+
 
 class PythonJobsScraper(BaseScraper):
 
@@ -115,16 +119,71 @@ class PythonJobsScraper(BaseScraper):
                     ).get_attribute("href")
 
                     # ------------------------------------
+                    # Job Description
+                    # ------------------------------------
+
+                    description = ""
+
+                    try:
+
+                        self.driver.execute_script(
+                            "window.open(arguments[0]);",
+                            href
+                        )
+
+                        self.driver.switch_to.window(
+                            self.driver.window_handles[-1]
+                        )
+
+                        WebDriverWait(self.driver, 10).until(
+                            EC.presence_of_element_located(
+                                (By.CSS_SELECTOR, "article.text")
+                            )
+                        )
+
+                        description = self.driver.find_element(
+                            By.CSS_SELECTOR,
+                            "article.text"
+                        ).text.strip()
+
+                    #    print("=" * 60)
+                    #    print(description[:1000])
+                    #    print("=" * 60)
+
+                    except Exception as error:
+
+                        print(f"Description error: {error}")
+
+                    finally:
+
+                        if len(self.driver.window_handles) > 1:
+
+                            self.driver.close()
+
+                            self.driver.switch_to.window(
+                                self.driver.window_handles[0]
+                            )
+
+                    # ------------------------------------
                     # Salary
                     # ------------------------------------
 
                     salary = "Not Specified"
 
                     # ------------------------------------
+                    # Description
+                    # -----------------------------------
+
+                #    description = ""
+
+                    # ------------------------------------
                     # Save
                     # ------------------------------------
 
                     jobs_processed += 1
+
+                #    print("DESCRIPTION:")
+                #    print(description[:300])
 
                     job_id = self.database.insert_job(
 
@@ -135,6 +194,8 @@ class PythonJobsScraper(BaseScraper):
                         location=location,
 
                         salary=salary,
+
+                        description=description,
 
                         url=href,
 
@@ -161,7 +222,8 @@ class PythonJobsScraper(BaseScraper):
 
                     self.database.process_job_skills(
                         job_id,
-                        title
+                        title,
+                        description
                     )
 
                     print(

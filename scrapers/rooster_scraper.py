@@ -9,6 +9,8 @@ from selenium.webdriver.common.by import By
 
 from scrapers.base_scraper import BaseScraper
 from database.postgres_db_manager import PostgreSQLDatabaseManager
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 
 class RoosterScraper(BaseScraper):
@@ -84,6 +86,60 @@ class RoosterScraper(BaseScraper):
                         "a.job-title"
                     ).get_attribute("href")
 
+                    # ------------------------------------
+                    # Description
+                    # ------------------------------------
+
+                    # ------------------------------------
+                    # Job Description
+                    # ------------------------------------
+
+                    description = ""
+
+                    try:
+
+                        # Open the job page in a new tab
+                        self.driver.execute_script(
+                            "window.open(arguments[0]);",
+                            url
+                        )
+
+                        # Switch to the new tab
+                        self.driver.switch_to.window(
+                            self.driver.window_handles[-1]
+                        )
+
+                        # Wait until the page loads
+                        WebDriverWait(self.driver, 10).until(
+                            EC.presence_of_element_located(
+                                (By.CSS_SELECTOR, "div.reader")
+                            )
+                        )
+
+                        # Extract the job description
+                        description = self.driver.find_element(
+                            By.CSS_SELECTOR,
+                            "div.reader"
+                        ).text.strip()
+
+                #        print("=" * 60)
+                #        print(description[:1000])
+                #        print("=" * 60)
+
+                    except Exception as error:
+
+                        print(f"Description error: {error}")
+
+                    finally:
+
+                        if len(self.driver.window_handles) > 1:
+
+                            self.driver.close()
+
+                            self.driver.switch_to.window(
+                                self.driver.window_handles[0]
+                            )
+
                     jobs_processed += 1
 
                     job_id = self.database.insert_job(
@@ -91,6 +147,7 @@ class RoosterScraper(BaseScraper):
                         company=company,
                         location=location,
                         salary=salary,
+                        description=description,
                         url=url,
                         source="Rooster"
                     )
@@ -109,7 +166,8 @@ class RoosterScraper(BaseScraper):
 
                     self.database.process_job_skills(
                         job_id,
-                        title
+                        title,
+                        description
                     )
 
                     print(

@@ -253,6 +253,12 @@ class RemoteOKScraper(BaseScraper):
 
                         url = "Not Available"
 
+                    # ------------------------------------
+                    # Description
+                    # ------------------------------------
+
+                    description = ""
+
                     # -----------------------------------
                     # Save Job
                     # -----------------------------------
@@ -264,6 +270,7 @@ class RemoteOKScraper(BaseScraper):
                         company=company,
                         location=location,
                         salary=salary,
+                        description=description,
                         url=url,
                         source="RemoteOK"
                     )
@@ -286,7 +293,8 @@ class RemoteOKScraper(BaseScraper):
 
                         self.database.process_job_skills(
                             job_id,
-                            title
+                            title,
+                            description
                         )
 
                     print(

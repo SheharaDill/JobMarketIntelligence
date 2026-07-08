@@ -63,12 +63,18 @@ COMMON_SKILLS = [
 ]
 
 
-def extract_skills(text):
+def extract_skills(
+    title,
+    description=""
+):
 
-    if not text:
+    title = title or ""
+    description = description or ""
+
+    text = f"{title} {description}".lower()
+
+    if not text.strip():
         return []
-
-    text = text.lower()
 
     found = []
 

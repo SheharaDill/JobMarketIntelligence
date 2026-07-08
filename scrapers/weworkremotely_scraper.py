@@ -18,6 +18,8 @@ from scrapers.base_scraper import BaseScraper
 from database.postgres_db_manager import (
     PostgreSQLDatabaseManager
 )
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 
 class WeWorkRemotelyScraper(BaseScraper):
@@ -123,6 +125,11 @@ class WeWorkRemotelyScraper(BaseScraper):
                     ).get_attribute(
                         "href"
                     )
+                    # ------------------------------------
+                    # Description
+                    # ------------------------------------
+
+                    description = ""
 
                     jobs_processed += 1
 
@@ -135,6 +142,7 @@ class WeWorkRemotelyScraper(BaseScraper):
                         company=company,
                         location=location,
                         salary="Not Specified",
+                        description=description,
                         url=url,
                         source="WeWorkRemotely"
                     )
@@ -157,7 +165,8 @@ class WeWorkRemotelyScraper(BaseScraper):
 
                         self.database.process_job_skills(
                             job_id,
-                            title
+                            title,
+                            description
                         )
 
                     print(
