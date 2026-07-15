@@ -487,6 +487,376 @@ class PostgreSQLDatabaseManager:
                     skill_id
                 )
 
+    # -----------------------------------
+    # Top Skills
+    # -----------------------------------
+
+    def get_top_skills(self, limit=10):
+
+        query = """
+            SELECT
+               s.name,
+               COUNT(js.skill_id) AS total
+            FROM job_skills js
+            JOIN skills s
+               ON js.skill_id = s.id
+            GROUP BY s.name
+            ORDER BY total DESC
+            LIMIT %s;
+        """
+
+        self.cursor.execute(query, (limit,))
+
+        return self.cursor.fetchall()
+
+    # -----------------------------------
+    # Jobs Per Category
+    # -----------------------------------
+    #
+# Returns the number of jobs
+# in each job category.
+#
+# Example:
+#
+# Backend      42
+# DevOps       18
+# AI            9
+#
+# Used by:
+#
+# GET /analytics/categories
+#
+# -----------------------------------
+
+    def get_jobs_per_category(self):
+
+        query = """
+            SELECT
+              job_category,
+              COUNT(*)
+            FROM jobs
+            GROUP BY job_category
+            ORDER BY COUNT(*) DESC;
+        """
+
+        self.cursor.execute(query)
+
+        return self.cursor.fetchall()
+
+    # -----------------------------------
+    # Top Skills By Category
+    # -----------------------------------
+    #
+# Returns the most requested skills
+# for a given job category.
+#
+# Example:
+#
+# Backend
+#
+# Python
+# Docker
+# PostgreSQL
+#
+# Used by:
+#
+# GET /analytics/skills/category/<category>
+#
+# -----------------------------------
+
+    def get_top_skills_by_category(
+        self,
+        category,
+        limit=10
+    ):
+
+        query = """
+            SELECT
+               s.name,
+               COUNT(*) AS total
+            FROM jobs j
+            JOIN job_skills js
+               ON j.id = js.job_id
+            JOIN skills s
+               ON js.skill_id = s.id
+            WHERE j.job_category = %s
+            GROUP BY s.name
+            ORDER BY total DESC
+            LIMIT %s;
+        """
+
+        self.cursor.execute(
+            query,
+            (
+                category,
+                limit
+            )
+        )
+
+        return self.cursor.fetchall()
+
+    # -----------------------------------
+    # Jobs Count By Skill
+    # -----------------------------------
+    #
+# Returns how many jobs
+# require a specific skill.
+#
+# Example:
+#
+# Python -> 38 Jobs
+#
+# Used by:
+#
+# GET /analytics/skills/Python
+#
+# -----------------------------------
+
+    def get_jobs_by_skill(self, skill_name):
+
+        query = """
+            SELECT
+               s.name,
+               COUNT(js.job_id)
+            FROM skills s
+            JOIN job_skills js
+               ON s.id = js.skill_id
+            WHERE LOWER(s.name) = LOWER(%s)
+            GROUP BY s.name;
+        """
+
+        self.cursor.execute(query, (skill_name,))
+
+        return self.cursor.fetchone()
+
+    # -----------------------------------
+    # Skills By List
+    # -----------------------------------
+    #
+# Returns skill counts
+# for a list of technologies.
+#
+# This method is reusable.
+#
+# It is used to build:
+#
+# Languages
+# Frameworks
+# Cloud
+# Databases
+# DevOps
+#
+# Used by:
+#
+# GET /analytics/technology-stack
+#
+# -----------------------------------
+
+    def get_skills_from_list(
+        self,
+        skill_list
+    ):
+
+        placeholders = ",".join(
+            ["%s"] * len(skill_list)
+        )
+
+        query = f"""
+           SELECT
+               s.name,
+               COUNT(js.job_id) AS total
+            FROM skills s
+            JOIN job_skills js
+                ON s.id = js.skill_id
+            WHERE s.name IN ({placeholders})
+            GROUP BY s.name
+            ORDER BY total DESC;
+        """
+
+        self.cursor.execute(
+            query,
+            tuple(skill_list)
+        )
+
+        return self.cursor.fetchall()
+
+    # -----------------------------------
+    # Add Method To Fetch Jobs Missing Summaries
+    # -----------------------------------
+    def get_jobs_without_summary(self):
+
+        try:
+
+            self.cursor.execute(
+                """
+                SELECT
+                    id,
+                    title,
+                    description
+                FROM jobs
+                WHERE summary_ai IS NULL
+                
+                """
+            )
+
+            return self.cursor.fetchall()
+
+        except Exception as error:
+
+            logger.error(
+                f"Job fetch failed: {error}"
+            )
+
+            return []
+
+    # -----------------------------------------
+    # Update Job Summary
+    # -----------------------------------------
+
+    def update_job_summary(
+        self,
+        job_id,
+        summary
+    ):
+        """
+        Save AI-generated summary
+        to the jobs table.
+        """
+
+        try:
+
+            self.cursor.execute(
+                """
+                UPDATE jobs
+                SET summary_ai = %s
+                WHERE id = %s
+                """,
+                (
+                    summary,
+                    job_id
+                )
+            )
+
+            self.connection.commit()
+
+        except Exception as error:
+
+            logger.error(
+                f"Summary update failed: {error}"
+            )
+
+            self.connection.rollback()
+
+    # -----------------------------------------
+    # Get Analytics Jobs
+    # -----------------------------------------
+    def get_analytics_jobs(self):
+        """
+        Return job data required
+        for analytics and reporting.
+        """
+        try:
+
+            self.cursor.execute(
+                """
+                SELECT
+                    id,
+                    title,
+                    company,
+                    job_category,
+                    scraped_date
+                FROM jobs
+                """
+            )
+
+            return self.cursor.fetchall()
+
+        except Exception as error:
+
+            logger.error(
+                f"Analytics fetch failed: {error}"
+            )
+
+            return []
+    # -----------------------------------------
+    # Get Jobs For Analysis
+    # -----------------------------------------
+
+    def get_jobs_for_analysis(self):
+        """
+        Return job data needed for
+        analytics and AI insights.
+        """
+
+        self.cursor.execute(
+            """
+            SELECT
+                id,
+                title,
+                company,
+                job_category,
+                scraped_date
+            FROM jobs
+            """
+        )
+
+        return self.cursor.fetchall()
+
+    # -----------------------------------------
+    # Update AI Skills
+    # -----------------------------------------
+
+    def update_job_skills_ai(
+        self,
+        job_id,
+        skills
+    ):
+        """
+        Save AI-generated skills.
+        """
+
+        self.cursor.execute(
+            """
+            UPDATE jobs
+            SET skills_ai = %s
+            WHERE id = %s
+            """,
+            (
+                skills,
+                job_id
+            )
+        )
+
+        self.connection.commit()
+
+    # -----------------------------------------
+    # Jobs Without AI Skills
+    # -----------------------------------------
+
+    def get_jobs_without_ai_skills(
+        self
+    ):
+        """
+        Fetch jobs that have not
+        been processed by Gemini.
+        """
+
+        self.cursor.execute(
+            """
+            SELECT
+                id,
+                title,
+                description
+            FROM jobs
+            WHERE skills_ai IS NULL
+            AND description IS NOT NULL
+            AND description <> ''
+            LIMIT 10
+            """
+        )
+
+        return self.cursor.fetchall()
+
     # -----------------------------------------
     # Get Job ID By URL
     # -----------------------------------------

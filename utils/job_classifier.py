@@ -190,4 +190,4 @@ class JobClassifier:
         if self.has_keyword(text, self.FRONTEND):
             return "Frontend"
 
-        return "Other"
+        return "Full Stack"

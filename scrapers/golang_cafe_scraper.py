@@ -131,6 +131,8 @@ class GolangCafeScraper(BaseScraper):
                             "div.prose"
                         ).text.strip()
 
+                   
+
                     except Exception as error:
 
                         # If anything goes wrong,

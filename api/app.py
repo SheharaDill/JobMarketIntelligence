@@ -501,6 +501,292 @@ def top_companies():
     db.close()
 
     return companies
+
+# -----------------------------------
+# Top Skills
+# -----------------------------------
+
+
+@app.route("/analytics/top-skills")
+def top_skills():
+
+    db = PostgreSQLDatabaseManager()
+
+    rows = db.get_top_skills()
+
+    skills = []
+
+    for row in rows:
+
+        skills.append(
+            {
+                "skill": row[0],
+                "count": row[1]
+            }
+        )
+
+    db.close()
+
+    return skills
+
+# -----------------------------------
+# Jobs Per Category
+# -----------------------------------
+#
+# Returns the number of jobs
+# in each category.
+#
+# URL:
+#
+# /analytics/categories
+#
+# -----------------------------------
+
+
+@app.route("/analytics/categories")
+def jobs_per_category():
+
+    db = PostgreSQLDatabaseManager()
+
+    rows = db.get_jobs_per_category()
+
+    categories = []
+
+    for row in rows:
+
+        categories.append(
+            {
+                "category": row[0],
+                "count": row[1]
+            }
+        )
+
+    db.close()
+
+    return categories
+
+# -----------------------------------
+# Top Skills By Category
+# -----------------------------------
+#
+# Returns the most requested
+# skills for a category.
+#
+# Example:
+#
+# /analytics/skills/category/Backend
+#
+# -----------------------------------
+
+
+@app.route(
+    "/analytics/skills/category/<category>"
+)
+def skills_by_category(category):
+
+    db = PostgreSQLDatabaseManager()
+
+    rows = db.get_top_skills_by_category(
+        category
+    )
+
+    skills = []
+
+    for row in rows:
+
+        skills.append(
+            {
+                "skill": row[0],
+                "count": row[1]
+            }
+        )
+
+    db.close()
+
+    return skills
+
+# -----------------------------------
+# Jobs By Skill
+# -----------------------------------
+# -----------------------------------
+#
+# Returns how many jobs
+# require a given skill.
+#
+# Example:
+#
+# /analytics/skills/Python
+#
+# -----------------------------------
+
+
+@app.route("/analytics/skills/<skill>")
+def jobs_by_skill(skill):
+
+    db = PostgreSQLDatabaseManager()
+
+    row = db.get_jobs_by_skill(skill)
+
+    db.close()
+
+    if row is None:
+
+        return {
+            "skill": skill,
+            "jobs": 0
+        }
+
+    return {
+        "skill": row[0],
+        "jobs": row[1]
+    }
+
+# -----------------------------------
+# Technology Stack
+# -----------------------------------
+#
+# Returns grouped technology
+# statistics.
+#
+# Categories:
+#
+# Languages
+# Frameworks
+# Cloud
+# Databases
+# DevOps
+#
+# URL:
+#
+# /analytics/technology-stack
+#
+# -----------------------------------
+
+
+@app.route("/analytics/technology-stack")
+def technology_stack():
+
+    db = PostgreSQLDatabaseManager()
+
+    languages = [
+        "Python",
+        "Go",
+        "Golang",
+        "Java",
+        "JavaScript",
+        "TypeScript",
+        "Rust",
+        "C++",
+        "C#"
+    ]
+
+    frameworks = [
+        "React",
+        "Angular",
+        "Vue",
+        "Django",
+        "Flask",
+        "FastAPI",
+        "Spring",
+        "Node"
+    ]
+
+    cloud = [
+        "AWS",
+        "Azure",
+        "GCP"
+    ]
+
+    databases = [
+        "PostgreSQL",
+        "MySQL",
+        "MongoDB",
+        "Redis"
+    ]
+
+    devops = [
+        "Docker",
+        "Kubernetes",
+        "Terraform",
+        "CI/CD",
+        "Git",
+        "Linux"
+    ]
+
+    result = {
+
+        "languages": [
+            {
+                "skill": row[0],
+                "count": row[1]
+            }
+            for row in db.get_skills_from_list(languages)
+        ],
+
+        "frameworks": [
+            {
+                "skill": row[0],
+                "count": row[1]
+            }
+            for row in db.get_skills_from_list(frameworks)
+        ],
+
+        "cloud": [
+            {
+                "skill": row[0],
+                "count": row[1]
+            }
+            for row in db.get_skills_from_list(cloud)
+        ],
+
+        "databases": [
+            {
+                "skill": row[0],
+                "count": row[1]
+            }
+            for row in db.get_skills_from_list(databases)
+        ],
+
+        "devops": [
+            {
+                "skill": row[0],
+                "count": row[1]
+            }
+            for row in db.get_skills_from_list(devops)
+        ]
+
+    }
+
+    db.close()
+
+    return result
+
+# -----------------------------------
+# AI Market Insights
+# -----------------------------------
+
+
+@app.route("/analytics/ai-insights")
+def ai_insights():
+
+    db = PostgreSQLDatabaseManager()
+
+    jobs = db.get_jobs_for_analysis()
+
+    from ai.market_insights import (
+        MarketInsights
+    )
+
+    service = MarketInsights()
+
+    insights = service.generate(jobs)
+
+    db.close()
+
+    return {
+        "insights": insights
+    }
+
 # -----------------------------------
 # Analytics Summary
 # -----------------------------------
